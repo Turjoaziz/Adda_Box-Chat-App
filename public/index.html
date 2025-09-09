@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Adda_Box Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: ui-sans-serif, system-ui; max-width: 720px; margin: 20px auto; }
+    .row { display: flex; gap: 8px; margin: 6px 0; }
+    #log { border: 1px solid #ccc; padding: 10px; height: 300px; overflow: auto; background: #fafafa; }
+    input, button { padding: 8px; }
+  </style>
+</head>
+<body>
+  <h1>💬 Adda_Box Chat (Dev)</h1>
+
+  <h3>Register</h3>
+  <div class="row">
+    <input id="rName" placeholder="name">
+    <input id="rEmail" placeholder="email">
+    <input id="rPass" type="password" placeholder="password (min 6)">
+    <button id="btnRegister">Register</button>
+  </div>
+
+  <h3>Login</h3>
+  <div class="row">
+    <input id="lEmail" placeholder="email">
+    <input id="lPass" type="password" placeholder="password">
+    <button id="btnLogin">Login</button>
+  </div>
+
+  <p><b>Token:</b> <span id="token">(none)</span></p>
+
+  <h3>Room</h3>
+  <div class="row">
+    <input id="room" value="general">
+    <button id="btnJoin">Join Room</button>
+    <button id="btnLoad">Load Last 50</button>
+  </div>
+
+  <div id="log"></div>
+
+  <h3>Send Message</h3>
+  <div class="row">
+    <input id="msg" placeholder="Type message">
+    <button id="btnSend">Send</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let token = null;
+    let socket = null;
+    const $ = (id) => document.getElementById(id);
+    const log = (m) => { const d = document.createElement("div"); d.textContent = m; $("log").appendChild(d); $("log").scrollTop = $("log").scrollHeight; };
+
+    $("btnRegister").onclick = async () => {
+      const res = await fetch("/api/auth/register", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: $("rName").value, email: $("rEmail").value, password: $("rPass").value })
+      });
+      const data = await res.json();
+      if (res.ok) { token = data.token; $("token").textContent = token.slice(0, 24) + "..."; log("Registered."); connect(); }
+      else log("Register error: " + JSON.stringify(data));
+    };
+
+    $("btnLogin").onclick = async () => {
+      const res = await fetch("/api/auth/login", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: $("lEmail").value, password: $("lPass").value })
+      });
+      const data = await res.json();
+      if (res.ok) { token = data.token; $("token").textContent = token.slice(0, 24) + "..."; log("Logged in."); connect(); }
+      else log("Login error: " + JSON.stringify(data));
+    };
+
+    function connect() {
+      if (!token) return log("No token yet.");
+      socket = io("/", { auth: { token } });
+      socket.on("connect", () => log("Socket connected."));
+      socket.on("message:new", (m) => log(`${m.room} | ${m.from}: ${m.body}`));
+      socket.on("connect_error", (e) => log("Socket error: " + e.message));
+    }
+
+    $("btnJoin").onclick = () => {
+      if (!socket) return log("Connect first (login).");
+      const room = $("room").value || "general";
+      socket.emit("room:join", room);
+      log("Joined room: " + room);
+    };
+
+    $("btnLoad").onclick = async () => {
+      const room = $("room").value || "general";
+      const res = await fetch(`/api/messages/${room}`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (Array.isArray(data)) data.forEach(m => log(`${room} | ${m.from?.name || m.from}: ${m.body}`));
+      else log("Load error: " + JSON.stringify(data));
+    };
+
+    $("btnSend").onclick = () => {
+      if (!socket) return log("Connect first (login).");
+      const room = $("room").value || "general";
+      const body = $("msg").value;
+      if (!body) return;
+      socket.emit("message:send", { room, body });
+      $("msg").value = "";
+    };
+  </script>
+</body>
+</html>
