@@ -1,6 +1,7 @@
-# Adda_Box Chat App 💬
+# Adda_Box Chat App 
 
-A real-time chat platform built with **Node.js, Express, Socket.IO, and MongoDB**. Secure JWT authentication, instant messaging, and room-based conversations.
+A real-time chat application built with Node.js, Express, Socket.IO, and MongoDB Atlas.
+This project demonstrates modern full-stack development practices including REST APIs, JWT authentication, WebSockets, and cloud database integration.
 
 ## Features
 - User registration & login (JWT)
