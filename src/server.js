@@ -1,26 +1,51 @@
+// src/server.js
 import "dotenv/config";
 import express from "express";
 import http from "http";
 import cors from "cors";
-import { connectDB } from "./config/db.js";
+
+import { connectDB } from "./config/db.js";          // <-- keep ONLY this import
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/messages.routes.js";
+import usersRoutes from "./routes/users.routes.js";
 import { initSocket } from "./socket.js";
 
+// 1) Create app
 const app = express();
-app.use(express.json());
-app.use(cors({ origin: process.env.CORS_ORIGIN, credentials: true }));
 
+// 2) CORS (comma-separated origins in .env)
+const origins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map(s => s.trim())
+  .filter(Boolean);
+
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || origins.length === 0) return cb(null, true); // allow curl/postman
+    cb(null, origins.includes(origin));
+  },
+  credentials: true
+}));
+
+// 3) Core middleware and static files
+app.use(express.json());
 app.use(express.static("public"));
 
+// Health check (for Render)
+app.get("/healthz", (req, res) => res.json({ ok: true }));
+
+// 4) Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/users", usersRoutes);
 
+// 5) HTTP server + Socket.IO
 const server = http.createServer(app);
-initSocket(server, process.env.CORS_ORIGIN);
+initSocket(server, origins[0] || process.env.CORS_ORIGIN);
 
 const PORT = process.env.PORT || 4000;
 
+// 6) Connect DB then start
 connectDB(process.env.MONGO_URI)
   .then(() => server.listen(PORT, () => console.log(`🚀 Adda_Box listening on ${PORT}`)))
   .catch((err) => {

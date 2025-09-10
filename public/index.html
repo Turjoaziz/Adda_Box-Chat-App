@@ -4,106 +4,197 @@
   <meta charset="utf-8" />
   <title>Adda_Box Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { font-family: ui-sans-serif, system-ui; max-width: 720px; margin: 20px auto; }
-    .row { display: flex; gap: 8px; margin: 6px 0; }
-    #log { border: 1px solid #ccc; padding: 10px; height: 300px; overflow: auto; background: #fafafa; }
-    input, button { padding: 8px; }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>💬 Adda_Box Chat (Dev)</h1>
+<body class="bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 min-h-screen flex items-center justify-center">
+  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-4xl">
+    <h1 class="text-3xl font-bold text-center text-purple-700 mb-6"> Adda Box Chat</h1>
 
-  <h3>Register</h3>
-  <div class="row">
-    <input id="rName" placeholder="name">
-    <input id="rEmail" placeholder="email">
-    <input id="rPass" type="password" placeholder="password (min 6)">
-    <button id="btnRegister">Register</button>
-  </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- LEFT: Auth + Room + Send -->
+      <div class="md:col-span-2">
+        <!-- Register -->
+        <h3 class="text-lg font-semibold mb-2">Register</h3>
+        <div class="flex gap-2 mb-1">
+          <input id="rName" placeholder="name" class="border rounded px-3 py-2 w-1/3">
+          <input id="rEmail" placeholder="email" class="border rounded px-3 py-2 w-1/3">
+          <input id="rPass" type="password" placeholder="password (min 8, Aa1!)" class="border rounded px-3 py-2 w-1/3">
+          <button id="btnRegister" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Register</button>
+        </div>
+        <p id="pwHelp" class="text-xs text-gray-500 mb-4">Password must be ≥8 chars and include: lowercase, uppercase, number, special.</p>
 
-  <h3>Login</h3>
-  <div class="row">
-    <input id="lEmail" placeholder="email">
-    <input id="lPass" type="password" placeholder="password">
-    <button id="btnLogin">Login</button>
-  </div>
+        <!-- Login -->
+        <h3 class="text-lg font-semibold mb-2">Login</h3>
+        <div class="flex gap-2 mb-2">
+          <input id="lEmail" placeholder="email" class="border rounded px-3 py-2 flex-1">
+          <input id="lPass" type="password" placeholder="password" class="border rounded px-3 py-2 flex-1">
+          <button id="btnLogin" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Login</button>
+          <button id="btnLogout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Logout</button>
+        </div>
 
-  <p><b>Token:</b> <span id="token">(none)</span></p>
+        <p class="text-sm text-gray-600 mb-4"><b>Token:</b> <span id="token">(none)</span></p>
 
-  <h3>Room</h3>
-  <div class="row">
-    <input id="room" value="general">
-    <button id="btnJoin">Join Room</button>
-    <button id="btnLoad">Load Last 50</button>
-  </div>
+        <!-- Room -->
+        <h3 class="text-lg font-semibold mb-2">Room</h3>
+        <div class="flex gap-2 mb-3">
+          <input id="room" value="general" class="border rounded px-3 py-2 flex-1">
+          <button id="btnJoin" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Join Room</button>
+          <button id="btnLoad" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded">Load Last 50</button>
+        </div>
 
-  <div id="log"></div>
+        <div id="log" class="border rounded p-3 h-64 overflow-auto bg-gray-50 text-sm"></div>
 
-  <h3>Send Message</h3>
-  <div class="row">
-    <input id="msg" placeholder="Type message">
-    <button id="btnSend">Send</button>
+        <h3 class="text-lg font-semibold mt-4 mb-2">Send Message</h3>
+        <div class="flex gap-2">
+          <input id="msg" placeholder="Type message" class="border rounded px-3 py-2 flex-1">
+          <button id="btnSend" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">Send</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Presence -->
+      <div>
+        <h3 class="text-lg font-semibold mb-2">Online Users</h3>
+        <ul id="onlineList" class="border rounded p-3 h-80 overflow-auto bg-gray-50 text-sm space-y-1">
+          <!-- filled dynamically -->
+        </ul>
+      </div>
+    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     let token = null;
     let socket = null;
+
     const $ = (id) => document.getElementById(id);
     const log = (m) => { const d = document.createElement("div"); d.textContent = m; $("log").appendChild(d); $("log").scrollTop = $("log").scrollHeight; };
 
+    // Simple client-side password hint (server still enforces)
+    const strongPw = (pw) => pw.length >= 8 && /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /\d/.test(pw) && /[^A-Za-z0-9]/.test(pw);
+    $("rPass").addEventListener("input", () => {
+      $("pwHelp").className = strongPw($("rPass").value) ? "text-xs text-green-600 mb-4" : "text-xs text-gray-500 mb-4";
+    });
+
+    // JWT helpers
+    function decodeJwt(t){ try{ const p=t.split(".")[1]; return JSON.parse(atob(p.replace(/-/g,"+").replace(/_/g,"/"))); }catch{ return null; } }
+    function isExpired(t){ const p=decodeJwt(t); if(!p||!p.exp) return false; return (p.exp*1000)<=Date.now(); }
+
+    // Token save/clear
+    function saveToken(t){ token=t; localStorage.setItem("adda_token",t); $("token").textContent=t.slice(0,24)+"..."; }
+    function hardLogout(msg="Logged out."){ localStorage.removeItem("adda_token"); token=null; if(socket&&socket.connected) socket.disconnect(); $("token").textContent="(none)"; log(msg); }
+
+    // Register
     $("btnRegister").onclick = async () => {
-      const res = await fetch("/api/auth/register", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: $("rName").value, email: $("rEmail").value, password: $("rPass").value })
-      });
-      const data = await res.json();
-      if (res.ok) { token = data.token; $("token").textContent = token.slice(0, 24) + "..."; log("Registered."); connect(); }
-      else log("Register error: " + JSON.stringify(data));
+      try{
+        if(!strongPw($("rPass").value)) return log("Register error: Weak password (see rules).");
+        const res=await fetch("/api/auth/register",{ method:"POST", headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ name:$("rName").value, email:$("rEmail").value, password:$("rPass").value }) });
+        const data=await res.json();
+        if(!res.ok) return log("Register error: "+JSON.stringify(data));
+        saveToken(data.token); connect();
+      }catch(e){ log("Register error: "+e.message); }
     };
 
+    // Login
     $("btnLogin").onclick = async () => {
-      const res = await fetch("/api/auth/login", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: $("lEmail").value, password: $("lPass").value })
-      });
-      const data = await res.json();
-      if (res.ok) { token = data.token; $("token").textContent = token.slice(0, 24) + "..."; log("Logged in."); connect(); }
-      else log("Login error: " + JSON.stringify(data));
+      try{
+        const res=await fetch("/api/auth/login",{ method:"POST", headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ email:$("lEmail").value, password:$("lPass").value }) });
+        const data=await res.json();
+        if(!res.ok) return log("Login error: "+JSON.stringify(data));
+        saveToken(data.token); connect();
+      }catch(e){ log("Login error: "+e.message); }
     };
 
-    function connect() {
-      if (!token) return log("No token yet.");
-      socket = io("/", { auth: { token } });
-      socket.on("connect", () => log("Socket connected."));
-      socket.on("message:new", (m) => log(`${m.room} | ${m.from}: ${m.body}`));
-      socket.on("connect_error", (e) => log("Socket error: " + e.message));
+    // Logout
+    $("btnLogout").onclick = () => hardLogout("Logged out by user.");
+
+    // Presence UI
+    let onlineSet = new Set();
+    function renderPresence(listIds){
+      const ul = $("onlineList");
+      ul.innerHTML = "";
+      if(!Array.isArray(listIds) || listIds.length===0){ ul.innerHTML = "<li class='text-gray-500'>Nobody online</li>"; return; }
+      fetch("/api/users/lookup",{ method:"POST", headers:{ "Content-Type":"application/json", Authorization:`Bearer ${token}` }, body: JSON.stringify({ ids: listIds }) })
+        .then(r=>r.json())
+        .then(users=>{
+          users.sort((a,b)=>a.name.localeCompare(b.name));
+          users.forEach(u=>{
+            const li=document.createElement("li");
+            li.textContent = "• " + u.name;
+            li.className = "text-green-700";
+            ul.appendChild(li);
+          });
+        }).catch(()=>{ ul.innerHTML="<li class='text-gray-500'>Online list unavailable</li>"; });
     }
 
-    $("btnJoin").onclick = () => {
-      if (!socket) return log("Connect first (login).");
+    // Socket connect
+    function connect(){
+      if(!token) return log("No token yet. Please login/register.");
+      if(isExpired(token)) return hardLogout("Session expired. Please login again.");
+      if(socket && socket.connected) socket.disconnect();
+
+      socket = io("/", { auth:{ token } });
+      socket.on("connect", () => log("Socket connected."));
+
+      socket.on("presence:init", (ids)=>{ onlineSet = new Set(ids); renderPresence(Array.from(onlineSet)); });
+      socket.on("presence:update", ({ userId, isOnline })=>{
+        if(isOnline) onlineSet.add(userId); else onlineSet.delete(userId);
+        renderPresence(Array.from(onlineSet));
+      });
+
+      socket.on("message:new", (m)=> log(`${m.room} | ${m.from}: ${m.body}`));
+
+      socket.on("connect_error", (e)=>{
+        log("Socket error: "+e.message);
+        if(String(e.message).toLowerCase().includes("invalid token")) hardLogout("Token invalid. Please login again.");
+      });
+    }
+
+    // Join room
+    $("btnJoin").onclick = ()=>{
+      if(!token) return log("Login first. Token is empty.");
+      if(isExpired(token)) return hardLogout("Session expired. Please login again.");
+      if(!socket) return log("Socket not connected. Try login again.");
       const room = $("room").value || "general";
       socket.emit("room:join", room);
-      log("Joined room: " + room);
+      log("Joined room: "+room);
     };
 
-    $("btnLoad").onclick = async () => {
+    // Load history
+    $("btnLoad").onclick = async ()=>{
+      if(!token) return log("Login first. Token is empty.");
+      if(isExpired(token)) return hardLogout("Session expired. Please login again.");
       const room = $("room").value || "general";
-      const res = await fetch(`/api/messages/${room}`, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      if (Array.isArray(data)) data.forEach(m => log(`${room} | ${m.from?.name || m.from}: ${m.body}`));
-      else log("Load error: " + JSON.stringify(data));
+      try{
+        const res = await fetch(`/api/messages/${room}`, { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json();
+        if(res.status===401) return hardLogout("Auth failed (401). Please login again.");
+        if(!res.ok) return log("Load error: "+JSON.stringify(data));
+        data.forEach(m=> log(`${room} | ${m.from?.name || m.from}: ${m.body}`));
+      }catch(e){ log("Load error: "+e.message); }
     };
 
-    $("btnSend").onclick = () => {
-      if (!socket) return log("Connect first (login).");
+    // Send
+    $("btnSend").onclick = ()=>{
+      if(!token) return log("Login first. Token is empty.");
+      if(isExpired(token)) return hardLogout("Session expired. Please login again.");
+      if(!socket) return log("Socket not connected. Try login again.");
       const room = $("room").value || "general";
       const body = $("msg").value;
-      if (!body) return;
+      if(!body) return;
       socket.emit("message:send", { room, body });
       $("msg").value = "";
     };
+
+    // Auto-login on refresh
+    window.addEventListener("DOMContentLoaded", ()=>{
+      const saved = localStorage.getItem("adda_token");
+      if(saved){
+        if(isExpired(saved)){ hardLogout("Saved session expired. Please login again."); }
+        else { saveToken(saved); connect(); log("Restored session from saved token."); }
+      }
+    });
   </script>
 </body>
 </html>
