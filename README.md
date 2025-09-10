@@ -16,7 +16,7 @@ A real-time chat application built with **Node.js, Express, MongoDB, and Socket.
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 adda_box/
 ├── public/ # Frontend (HTML + Tailwind + JS)
 │ └── index.html
