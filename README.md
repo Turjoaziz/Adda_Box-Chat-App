@@ -20,6 +20,7 @@ The deployment may need time to start if the hosting service has put it to sleep
 - Real-time messages through Socket.IO and message storage in MongoDB.
 - A **Load Last 50** button for a room's recent message history.
 - Online presence tracking, including multiple connections for the same user.
+- Automatic rejoining of confirmed rooms after a temporary connection loss, with connection status and offline draft protection.
 - A frontend styled with Tailwind CSS loaded from a CDN.
 
 ## Run locally
@@ -96,7 +97,10 @@ npm start
 3. In both windows, enter the same room name and click **Join Room**.
 4. Send a message and check that it appears in both windows.
 5. Click **Load Last 50** to retrieve stored messages for that room.
-6. After a refresh or reconnect, click **Join Room** again to receive live messages. Restoring the login token does not automatically rejoin the room.
+6. After a temporary connection loss, previously confirmed rooms are rejoined automatically when the socket reconnects. Wait for the new **Joined room** confirmation before sending. If you try to send while offline, your draft remains in the message box.
+7. After a full page refresh or a new login, click **Join Room** again. Room membership is remembered only in the current page session; drafts are not saved across refreshes.
+
+Only confirmed room joins are restored. Missed messages are not automatically replayed: use **Load Last 50** to retrieve recent stored history. This update does not guarantee delivery of messages already in flight when a connection drops.
 
 Rooms currently group conversations; they do not have private membership or invitation controls.
 
@@ -144,7 +148,7 @@ For a Node.js hosting service such as Render:
 | `Invalid configuration` | Fix the variables listed in the startup error: supply `MONGO_URI` and `JWT_SECRET`, replace the example secret, and use a valid port. |
 | `DB connection failed` | Check MongoDB availability, credentials, and Atlas network access. The HTTP server starts only after the initial database connection succeeds. |
 | Login or registration fails after database connection | Ensure `JWT_SECRET` is configured and check the server logs. |
-| Interface opens but live messages do not arrive | Join the same room in both windows; rejoin after reconnecting. |
+| Interface opens but live messages do not arrive | Join the same room in both windows. After a temporary disconnect, wait for the connection and room confirmations; after a full refresh, join the room again. |
 | API or Socket.IO requests fail on GitHub Pages or a local HTML file | Open the app through the Node.js server, which supplies these endpoints. |
 | Session expired or token invalid | Log in again; tokens expire after seven days and become invalid if the JWT secret changes. |
 
@@ -158,13 +162,15 @@ Run the configuration regression tests with:
 npm test
 ```
 
-These tests use Node.js's built-in test runner and need no database or real credentials. They cover required settings, the sample secret, port validation, and safe error messages. They do not test live authentication or messaging; use the conversation steps above for a manual smoke check.
+These tests use Node.js's built-in test runner and need no database or real credentials. They cover required settings, the sample secret, port validation, and safe error messages. The frontend tests execute the actual inline client script with simulated DOM and socket events to check room rejoining, offline drafts, and logout cleanup. They do not test a real browser, live authentication, or real network messaging; use the conversation steps above for a manual smoke check.
 
 ## Improvement reports
 
 [Report 01: local setup and documentation](docs/improvement-report-01.md)
 
 [Report 02: startup configuration validation](docs/improvement-report-02.md)
+
+[Report 03: chat reconnection and offline drafts](docs/improvement-report-03.md)
 
 ## License
 

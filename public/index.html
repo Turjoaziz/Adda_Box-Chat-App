@@ -33,6 +33,7 @@
         </div>
 
         <p class="text-sm text-gray-600 mb-4"><b>Token:</b> <span id="token">(none)</span></p>
+        <p id="connectionStatus" role="status" class="text-sm text-gray-600 mb-4">Not connected. Please log in.</p>
 
         <!-- Room -->
         <h3 class="text-lg font-semibold mb-2">Room</h3>
@@ -65,6 +66,9 @@
   <script>
     let token = null;
     let socket = null;
+    // Remember confirmed rooms for this login, and track which are ready now.
+    const joinedRooms = new Set();
+    const readyRooms = new Set();
 
     const $ = (id) => document.getElementById(id);
     const log = (m) => { const d = document.createElement("div"); d.textContent = m; $("log").appendChild(d); $("log").scrollTop = $("log").scrollHeight; };
@@ -80,8 +84,30 @@
     function isExpired(t){ const p=decodeJwt(t); if(!p||!p.exp) return false; return (p.exp*1000)<=Date.now(); }
 
     // Token save/clear
-    function saveToken(t){ token=t; localStorage.setItem("adda_token",t); $("token").textContent=t.slice(0,24)+"..."; }
-    function hardLogout(msg="Logged out."){ localStorage.removeItem("adda_token"); token=null; if(socket&&socket.connected) socket.disconnect(); $("token").textContent="(none)"; log(msg); }
+    function closeSocket(){
+      if(socket){
+        socket.removeAllListeners();
+        socket.disconnect(); // Also cancels reconnect attempts when already offline.
+        socket=null;
+      }
+      readyRooms.clear();
+    }
+    function saveToken(t){
+      closeSocket();
+      joinedRooms.clear();
+      token=t;
+      localStorage.setItem("adda_token",t);
+      $("token").textContent=t.slice(0,24)+"...";
+    }
+    function hardLogout(msg="Logged out."){
+      localStorage.removeItem("adda_token");
+      token=null;
+      closeSocket();
+      joinedRooms.clear();
+      $("token").textContent="(none)";
+      $("connectionStatus").textContent="Not connected. Please log in.";
+      log(msg);
+    }
 
     // Register
     $("btnRegister").onclick = async () => {
@@ -132,10 +158,27 @@
     function connect(){
       if(!token) return log("No token yet. Please login/register.");
       if(isExpired(token)) return hardLogout("Session expired. Please login again.");
-      if(socket && socket.connected) socket.disconnect();
+      closeSocket();
+      $("connectionStatus").textContent="Connecting…";
 
       socket = io("/", { auth:{ token } });
-      socket.on("connect", () => log("Socket connected."));
+      socket.on("connect", () => {
+        readyRooms.clear();
+        $("connectionStatus").textContent="Connected.";
+        log("Socket connected.");
+        // Socket.IO creates a new server connection after a network interruption.
+        // Rejoin rooms only after that connection is ready.
+        for(const room of joinedRooms) socket.emit("room:join", room);
+      });
+      socket.on("room:joined", (room) => {
+        joinedRooms.add(room);
+        readyRooms.add(room);
+        log("Joined room: "+room);
+      });
+      socket.on("disconnect", () => {
+        readyRooms.clear();
+        $("connectionStatus").textContent="Disconnected. Waiting for a connection; your draft is kept.";
+      });
 
       socket.on("presence:init", (ids)=>{ onlineSet = new Set(ids); renderPresence(Array.from(onlineSet)); });
       socket.on("presence:update", ({ userId, isOnline })=>{
@@ -146,6 +189,8 @@
       socket.on("message:new", (m)=> log(`${m.room} | ${m.from}: ${m.body}`));
 
       socket.on("connect_error", (e)=>{
+        readyRooms.clear();
+        $("connectionStatus").textContent="Connection failed. Check your network or log in again.";
         log("Socket error: "+e.message);
         if(String(e.message).toLowerCase().includes("invalid token")) hardLogout("Token invalid. Please login again.");
       });
@@ -155,10 +200,9 @@
     $("btnJoin").onclick = ()=>{
       if(!token) return log("Login first. Token is empty.");
       if(isExpired(token)) return hardLogout("Session expired. Please login again.");
-      if(!socket) return log("Socket not connected. Try login again.");
+      if(!socket?.connected) return log("Not connected. Wait for the connection before joining a room.");
       const room = $("room").value || "general";
       socket.emit("room:join", room);
-      log("Joined room: "+room);
     };
 
     // Load history
@@ -179,8 +223,9 @@
     $("btnSend").onclick = ()=>{
       if(!token) return log("Login first. Token is empty.");
       if(isExpired(token)) return hardLogout("Session expired. Please login again.");
-      if(!socket) return log("Socket not connected. Try login again.");
+      if(!socket?.connected) return log("Message not sent: you are offline. Your draft is kept.");
       const room = $("room").value || "general";
+      if(!readyRooms.has(room)) return log("Message not sent: join this room and wait for confirmation. Your draft is kept.");
       const body = $("msg").value;
       if(!body) return;
       socket.emit("message:send", { room, body });
