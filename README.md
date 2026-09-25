@@ -71,6 +71,8 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 
 Keep `.env` private; `.gitignore` already excludes it. `.env.example` contains only sample values. If you change the port, update the origin and browser URL too. Changing `JWT_SECRET` invalidates existing login tokens.
 
+Before connecting to MongoDB, the server checks that `MONGO_URI` and `JWT_SECRET` are present and nonblank. It rejects the example JWT placeholder and invalid ports (`PORT` must be a whole number from 1 to 65535). If configuration is invalid, startup stops with an error listing the settings to fix, without printing their values.
+
 The HTTP API accepts comma-separated origins, but the current server passes only the first origin to Socket.IO. Use a single origin for this setup. Leaving `CORS_ORIGIN` empty permits any origin for HTTP API CORS; use an explicit origin for deployment.
 
 ### 3. Start the application
@@ -105,6 +107,7 @@ Rooms currently group conversations; they do not have private membership or invi
 | `public/index.html` | Chat interface, authentication requests, and Socket.IO client |
 | `src/server.js` | Express setup, static files, API routes, and server startup |
 | `src/config/db.js` | MongoDB connection |
+| `src/config/env.js` | Startup checks for required configuration and port settings |
 | `src/middleware/auth.js` | JWT verification for protected HTTP endpoints |
 | `src/models/` | User and message schemas |
 | `src/routes/` | Authentication, message history, and user lookup endpoints |
@@ -138,7 +141,7 @@ For a Node.js hosting service such as Render:
 
 | Symptom | What to check |
 | --- | --- |
-| `MONGO_URI missing` | Create `.env` in the project root and set `MONGO_URI`. |
+| `Invalid configuration` | Fix the variables listed in the startup error: supply `MONGO_URI` and `JWT_SECRET`, replace the example secret, and use a valid port. |
 | `DB connection failed` | Check MongoDB availability, credentials, and Atlas network access. The HTTP server starts only after the initial database connection succeeds. |
 | Login or registration fails after database connection | Ensure `JWT_SECRET` is configured and check the server logs. |
 | Interface opens but live messages do not arrive | Join the same room in both windows; rejoin after reconnecting. |
@@ -149,11 +152,19 @@ For a Node.js hosting service such as Render:
 
 Passwords are hashed with bcrypt, and protected HTTP routes and socket connections verify JWTs. Tokens are stored in localStorage, and room access is not restricted by membership. Review these choices before handling sensitive conversations.
 
-The repository currently has no automated test script. The conversation steps above are a manual smoke-check procedure, not a claim that the deployment has been tested.
+Run the configuration regression tests with:
+
+```bash
+npm test
+```
+
+These tests use Node.js's built-in test runner and need no database or real credentials. They cover required settings, the sample secret, port validation, and safe error messages. They do not test live authentication or messaging; use the conversation steps above for a manual smoke check.
 
 ## Improvement reports
 
 [Report 01: local setup and documentation](docs/improvement-report-01.md)
+
+[Report 02: startup configuration validation](docs/improvement-report-02.md)
 
 ## License
 

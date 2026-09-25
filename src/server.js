@@ -4,11 +4,21 @@ import express from "express";
 import http from "http";
 import cors from "cors";
 
-import { connectDB } from "./config/db.js";          // <-- keep ONLY this import
+import { connectDB } from "./config/db.js";
+import { validateEnv } from "./config/env.js";
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/messages.routes.js";
 import usersRoutes from "./routes/users.routes.js";
 import { initSocket } from "./socket.js";
+
+// Fail early instead of discovering missing settings during login or signup.
+let config;
+try {
+  config = validateEnv(process.env);
+} catch (err) {
+  console.error(err.message);
+  process.exit(1);
+}
 
 // 1) Create app
 const app = express();
@@ -43,7 +53,7 @@ app.use("/api/users", usersRoutes);
 const server = http.createServer(app);
 initSocket(server, origins[0] || process.env.CORS_ORIGIN);
 
-const PORT = process.env.PORT || 4000;
+const PORT = config.port;
 
 // 6) Connect DB then start
 connectDB(process.env.MONGO_URI)
