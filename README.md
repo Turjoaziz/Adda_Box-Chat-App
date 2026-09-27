@@ -147,6 +147,7 @@ For a Node.js hosting service such as Render:
 | --- | --- |
 | `Invalid configuration` | Fix the variables listed in the startup error: supply `MONGO_URI` and `JWT_SECRET`, replace the example secret, and use a valid port. |
 | `DB connection failed` | Check MongoDB availability, credentials, and Atlas network access. The HTTP server starts only after the initial database connection succeeds. |
+| `querySrv ENOTFOUND` for a MongoDB Atlas host | The hostname in `MONGO_URI` may be old, deleted, or mistyped. Copy a fresh connection string from Atlas and update the deployment environment variable. |
 | Login or registration fails after database connection | Ensure `JWT_SECRET` is configured and check the server logs. |
 | Interface opens but live messages do not arrive | Join the same room in both windows. After a temporary disconnect, wait for the connection and room confirmations; after a full refresh, join the room again. |
 | API or Socket.IO requests fail on GitHub Pages or a local HTML file | Open the app through the Node.js server, which supplies these endpoints. |
