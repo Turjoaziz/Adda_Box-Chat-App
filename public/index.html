@@ -2,242 +2,904 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Adda_Box Chat</title>
+  <title>Adda Box Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --ink:#171827;
+      --muted:#74788a;
+      --line:#e7e8f0;
+      --panel:#ffffff;
+      --soft:#f7f6fc;
+      --lavender:#efe9ff;
+      --purple:#7c2df4;
+      --purple-dark:#6520d4;
+      --green:#21a765;
+      --danger:#e04f5f;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--ink);
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(151,114,255,.20), transparent 32%),
+        radial-gradient(circle at 82% 14%, rgba(106,193,255,.20), transparent 30%),
+        radial-gradient(circle at 78% 82%, rgba(255,166,215,.22), transparent 30%),
+        linear-gradient(135deg,#eef1ff 0%,#f7f3ff 48%,#f7edf9 100%);
+      overflow-x:hidden;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.34;
+      background-image:
+        linear-gradient(30deg, rgba(124,45,244,.08) 12%, transparent 12.5%, transparent 87%, rgba(124,45,244,.08) 87.5%, rgba(124,45,244,.08)),
+        linear-gradient(150deg, rgba(124,45,244,.08) 12%, transparent 12.5%, transparent 87%, rgba(124,45,244,.08) 87.5%, rgba(124,45,244,.08));
+      background-size:90px 156px;
+      background-position:0 0, 0 0;
+      mask-image:linear-gradient(to bottom,rgba(0,0,0,.7),transparent 92%);
+    }
+
+    button,input{font:inherit}
+
+    button{
+      border:0;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    button:active{transform:translateY(1px)}
+
+    .page-shell{
+      position:relative;
+      width:min(1180px,calc(100% - 32px));
+      margin:34px auto;
+      z-index:1;
+    }
+
+    .app-card{
+      background:rgba(255,255,255,.90);
+      border:1px solid rgba(255,255,255,.78);
+      box-shadow:0 28px 70px rgba(65,41,104,.14);
+      backdrop-filter:blur(18px);
+      border-radius:28px;
+      overflow:hidden;
+    }
+
+    .topbar{
+      height:78px;
+      padding:0 24px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.86);
+      gap:16px;
+    }
+
+    .brand-wrap{display:flex;align-items:center;gap:12px;min-width:0}
+    .brand-mark{
+      width:42px;height:42px;border-radius:14px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg,#8d42f7,#6e20e6);
+      color:white;font-weight:800;font-size:18px;
+      box-shadow:0 8px 20px rgba(124,45,244,.25);
+      flex:0 0 auto;
+    }
+
+    .brand-title{font-size:18px;font-weight:800;letter-spacing:-.02em}
+    .brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+    .top-actions{display:flex;align-items:center;gap:10px}
+    .status-pill{
+      display:flex;align-items:center;gap:7px;
+      background:#f7f8fb;border:1px solid var(--line);
+      color:#5e6371;border-radius:999px;
+      padding:8px 12px;font-size:12px;font-weight:650;
+      white-space:nowrap;
+    }
+    .status-dot{width:8px;height:8px;border-radius:50%;background:#a0a4af}
+    .status-pill.connected .status-dot{background:var(--green);box-shadow:0 0 0 4px rgba(33,167,101,.10)}
+
+    .ghost-btn{
+      padding:9px 13px;border-radius:12px;
+      background:#f6f7fb;color:#4c5260;font-size:12px;font-weight:700;
+      border:1px solid var(--line);
+    }
+    .ghost-btn:hover{background:#efeff6}
+
+    .auth-panel{
+      padding:18px 24px 20px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(247,245,255,.96),rgba(255,255,255,.92));
+    }
+    .auth-panel.authenticated{display:none}
+    .auth-title-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:13px}
+    .auth-title{font-weight:800;font-size:14px}
+    .auth-hint{font-size:12px;color:var(--muted)}
+
+    .auth-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .auth-box{
+      background:white;border:1px solid var(--line);
+      border-radius:17px;padding:14px;
+    }
+    .auth-box-title{font-size:12px;font-weight:800;color:#5d6270;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
+    .field-row{display:flex;gap:8px;align-items:center}
+    .field{
+      min-width:0;width:100%;
+      border:1px solid #e0e2ec;background:#fbfbfd;
+      border-radius:12px;padding:10px 11px;color:#262938;
+      outline:none;transition:.18s ease;
+    }
+    .field:focus{border-color:#b991ff;box-shadow:0 0 0 3px rgba(124,45,244,.10);background:white}
+    .primary-btn{
+      border-radius:12px;
+      padding:10px 14px;
+      color:white;font-size:12px;font-weight:800;
+      background:linear-gradient(135deg,#8b3df7,#7325e9);
+      box-shadow:0 7px 18px rgba(124,45,244,.20);
+      white-space:nowrap;
+    }
+    .primary-btn:hover{filter:brightness(.97);transform:translateY(-1px)}
+    .auth-help{font-size:11px;color:var(--muted);margin:9px 2px 0}
+
+    .workspace{
+      display:grid;
+      grid-template-columns:220px minmax(0,1fr) 220px;
+      min-height:680px;
+    }
+
+    .sidebar{
+      background:rgba(249,249,252,.88);
+      padding:20px 14px;
+    }
+    .sidebar-left{border-right:1px solid var(--line)}
+    .sidebar-right{border-left:1px solid var(--line)}
+
+    .section-label{
+      padding:0 8px;
+      margin-bottom:12px;
+      color:#9a9eaa;font-size:10px;font-weight:850;
+      letter-spacing:.09em;text-transform:uppercase;
+    }
+
+    .room-list{display:flex;flex-direction:column;gap:7px}
+    .room-chip{
+      display:flex;align-items:center;gap:9px;
+      width:100%;padding:11px 12px;border-radius:12px;
+      background:white;color:#555b69;
+      border:1px solid #ececf3;
+      font-size:13px;font-weight:700;text-align:left;
+    }
+    .room-chip:hover{border-color:#d7c4ff;background:#fbf9ff;color:var(--purple)}
+    .room-chip.active{
+      background:#efe6ff;color:#6f20e6;border-color:#e5d4ff;
+      box-shadow:0 6px 15px rgba(124,45,244,.08);
+    }
+
+    .join-card{
+      margin-top:18px;padding:12px;
+      border-radius:14px;background:white;border:1px solid var(--line);
+    }
+    .mini-input{
+      width:100%;border:1px solid var(--line);border-radius:10px;
+      padding:9px 10px;background:#fafafd;outline:none;font-size:12px;
+    }
+    .mini-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+    .mini-btn{
+      border-radius:9px;padding:8px 7px;
+      font-size:11px;font-weight:800;
+      background:#f2edff;color:#6c25dc;
+    }
+    .mini-btn.secondary{background:#f4f5f8;color:#59606e}
+    .mini-btn:hover{filter:brightness(.97)}
+
+    .chat{
+      display:flex;flex-direction:column;min-width:0;background:rgba(255,255,255,.86);
+    }
+
+    .chat-head{
+      min-height:72px;padding:0 22px;
+      display:flex;align-items:center;justify-content:space-between;
+      border-bottom:1px solid var(--line);
+    }
+    .chat-room{font-size:15px;font-weight:850}
+    .chat-room-sub{font-size:11px;color:var(--muted);margin-top:3px}
+    .history-btn{
+      background:#f5f1ff;color:#6c25dc;border:1px solid #eadfff;
+      border-radius:10px;padding:8px 11px;font-size:11px;font-weight:800;
+    }
+
+    .log{
+      flex:1;
+      height:520px;
+      overflow-y:auto;
+      padding:22px 22px 14px;
+      display:flex;flex-direction:column;gap:12px;
+      scroll-behavior:smooth;
+    }
+    .log::-webkit-scrollbar{width:8px}
+    .log::-webkit-scrollbar-thumb{background:#e0d9ec;border-radius:99px}
+
+    .empty-state{
+      margin:auto;text-align:center;color:#8e93a1;
+      max-width:310px;padding:34px 18px;
+    }
+    .empty-icon{
+      width:54px;height:54px;border-radius:18px;
+      display:grid;place-items:center;margin:0 auto 12px;
+      background:#f3edff;color:#7426e8;font-weight:900;font-size:22px;
+    }
+    .empty-state b{display:block;color:#444958;margin-bottom:5px}
+
+    .system-message{
+      align-self:center;
+      max-width:86%;
+      padding:7px 10px;border-radius:999px;
+      color:#818694;background:#f5f6f9;
+      border:1px solid #eceef3;
+      font-size:11px;text-align:center;
+    }
+    .system-message.error{color:#b23b4a;background:#fff1f3;border-color:#ffdce1}
+
+    .message-row{
+      display:flex;gap:9px;align-items:flex-end;
+      max-width:82%;
+    }
+    .message-row.mine{align-self:flex-end;flex-direction:row-reverse}
+    .message-row.theirs{align-self:flex-start}
+
+    .avatar{
+      width:30px;height:30px;border-radius:50%;
+      display:grid;place-items:center;flex:0 0 auto;
+      background:#eee3ff;color:#7228dc;
+      font-size:11px;font-weight:850;
+    }
+    .message-row.mine .avatar{background:#7c2df4;color:white}
+
+    .bubble-wrap{min-width:0}
+    .sender-line{
+      display:flex;align-items:center;gap:7px;
+      font-size:10px;color:#818694;margin:0 4px 4px;
+    }
+    .message-row.mine .sender-line{justify-content:flex-end}
+    .sender-name{font-weight:800;color:#6f27d9}
+    .message-row.mine .sender-name{color:#7952b8}
+    .message-time{font-size:9px;color:#a2a6b1}
+
+    .bubble{
+      border-radius:16px 16px 16px 5px;
+      background:#f4effc;color:#303342;
+      padding:10px 12px;font-size:13px;line-height:1.45;
+      word-break:break-word;
+      border:1px solid #eee4fb;
+    }
+    .message-row.mine .bubble{
+      color:white;background:linear-gradient(135deg,#8b3ef5,#7324e8);
+      border-color:transparent;border-radius:16px 16px 5px 16px;
+      box-shadow:0 8px 18px rgba(124,45,244,.16);
+    }
+
+    .composer-wrap{
+      padding:14px 18px 18px;
+      border-top:1px solid var(--line);
+      background:rgba(255,255,255,.92);
+    }
+    .composer{
+      display:flex;align-items:center;gap:8px;
+      background:#fafafd;border:1px solid #e7e7ef;
+      border-radius:15px;padding:7px 7px 7px 13px;
+      box-shadow:0 6px 18px rgba(55,42,76,.04);
+    }
+    .composer input{
+      flex:1;min-width:0;border:0;background:transparent;
+      outline:none;padding:8px 3px;font-size:13px;color:#242735;
+    }
+    .send-btn{
+      width:42px;height:42px;border-radius:12px;
+      background:linear-gradient(135deg,#8b3df7,#7324e8);
+      color:white;font-size:18px;font-weight:900;
+      display:grid;place-items:center;
+      box-shadow:0 8px 18px rgba(124,45,244,.22);
+    }
+    .send-btn:hover{transform:translateY(-1px)}
+
+    .online-summary{
+      margin:0 7px 14px;
+      padding:11px 12px;border-radius:12px;
+      background:white;border:1px solid var(--line);
+      font-size:11px;color:#747987;
+    }
+    .online-summary strong{color:#353947}
+    .online-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+    .online-user{
+      display:flex;align-items:center;gap:9px;
+      padding:9px 8px;border-radius:12px;
+    }
+    .online-user:hover{background:#f3effa}
+    .presence-avatar{
+      width:34px;height:34px;border-radius:50%;
+      display:grid;place-items:center;
+      background:#ece2ff;color:#7428de;font-size:11px;font-weight:900;
+      position:relative;flex:0 0 auto;
+    }
+    .presence-avatar::after{
+      content:"";position:absolute;right:-1px;bottom:1px;
+      width:9px;height:9px;border-radius:50%;background:var(--green);
+      border:2px solid white;
+    }
+    .presence-name{font-size:12px;font-weight:800;color:#424654}
+    .presence-state{font-size:10px;color:#8b909e;margin-top:1px}
+
+    .token-hidden{
+      position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);
+      white-space:nowrap;
+    }
+
+    @media (max-width:900px){
+      .workspace{grid-template-columns:190px minmax(0,1fr)}
+      .sidebar-right{display:none}
+      .auth-grid{grid-template-columns:1fr}
+    }
+
+    @media (max-width:680px){
+      .page-shell{width:min(100% - 18px,620px);margin:9px auto}
+      .app-card{border-radius:20px}
+      .topbar{height:auto;padding:14px 16px;align-items:flex-start}
+      .brand-sub{display:none}
+      .top-actions{gap:6px}
+      .status-pill{padding:7px 9px}
+      .workspace{display:flex;flex-direction:column;min-height:auto}
+      .sidebar-left{border-right:0;border-bottom:1px solid var(--line);padding:12px}
+      .room-list{display:grid;grid-template-columns:repeat(2,1fr)}
+      .join-card{margin-top:10px}
+      .chat-head{min-height:64px;padding:0 16px}
+      .log{height:480px;padding:18px 14px 12px}
+      .composer-wrap{padding:10px 12px 14px}
+      .auth-panel{padding:14px}
+      .field-row{flex-wrap:wrap}
+      .field-row .primary-btn{width:100%}
+      .message-row{max-width:90%}
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 min-h-screen flex items-center justify-center">
-  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-4xl">
-    <h1 class="text-3xl font-bold text-center text-purple-700 mb-6"> Adda Box Chat</h1>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- LEFT: Auth + Room + Send -->
-      <div class="md:col-span-2">
-        <!-- Register -->
-        <h3 class="text-lg font-semibold mb-2">Register</h3>
-        <div class="flex gap-2 mb-1">
-          <input id="rName" placeholder="name" class="border rounded px-3 py-2 w-1/3">
-          <input id="rEmail" placeholder="email" class="border rounded px-3 py-2 w-1/3">
-          <input id="rPass" type="password" placeholder="password (min 8, Aa1!)" class="border rounded px-3 py-2 w-1/3">
-          <button id="btnRegister" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Register</button>
-        </div>
-        <p id="pwHelp" class="text-xs text-gray-500 mb-4">Password must be ≥8 chars and include: lowercase, uppercase, number, special.</p>
-
-        <!-- Login -->
-        <h3 class="text-lg font-semibold mb-2">Login</h3>
-        <div class="flex gap-2 mb-2">
-          <input id="lEmail" placeholder="email" class="border rounded px-3 py-2 flex-1">
-          <input id="lPass" type="password" placeholder="password" class="border rounded px-3 py-2 flex-1">
-          <button id="btnLogin" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Login</button>
-          <button id="btnLogout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Logout</button>
+<body>
+  <main class="page-shell">
+    <section class="app-card">
+      <header class="topbar">
+        <div class="brand-wrap">
+          <div class="brand-mark">A</div>
+          <div>
+            <div class="brand-title">Adda Box</div>
+            <div class="brand-sub">Real-time rooms, presence and chat history</div>
+          </div>
         </div>
 
-        <p class="text-sm text-gray-600 mb-4"><b>Token:</b> <span id="token">(none)</span></p>
-        <p id="connectionStatus" role="status" class="text-sm text-gray-600 mb-4">Not connected. Please log in.</p>
+        <div class="top-actions">
+          <div id="statusPill" class="status-pill">
+            <span class="status-dot"></span>
+            <span id="connectionStatus">Not connected</span>
+          </div>
+          <button id="btnLogout" class="ghost-btn">Logout</button>
+        </div>
+      </header>
 
-        <!-- Room -->
-        <h3 class="text-lg font-semibold mb-2">Room</h3>
-        <div class="flex gap-2 mb-3">
-          <input id="room" value="general" class="border rounded px-3 py-2 flex-1">
-          <button id="btnJoin" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Join Room</button>
-          <button id="btnLoad" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded">Load Last 50</button>
+      <section id="authPanel" class="auth-panel">
+        <div class="auth-title-row">
+          <div>
+            <div class="auth-title">Welcome to Adda Box</div>
+            <div class="auth-hint">Sign in or create an account to enter the conversation.</div>
+          </div>
         </div>
 
-        <div id="log" class="border rounded p-3 h-64 overflow-auto bg-gray-50 text-sm"></div>
+        <div class="auth-grid">
+          <div class="auth-box">
+            <div class="auth-box-title">Login</div>
+            <div class="field-row">
+              <input id="lEmail" class="field" placeholder="Email address" />
+              <input id="lPass" class="field" type="password" placeholder="Password" />
+              <button id="btnLogin" class="primary-btn">Login</button>
+            </div>
+          </div>
 
-        <h3 class="text-lg font-semibold mt-4 mb-2">Send Message</h3>
-        <div class="flex gap-2">
-          <input id="msg" placeholder="Type message" class="border rounded px-3 py-2 flex-1">
-          <button id="btnSend" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">Send</button>
+          <div class="auth-box">
+            <div class="auth-box-title">Create account</div>
+            <div class="field-row">
+              <input id="rName" class="field" placeholder="Name" />
+              <input id="rEmail" class="field" placeholder="Email" />
+              <input id="rPass" class="field" type="password" placeholder="Password" />
+              <button id="btnRegister" class="primary-btn">Register</button>
+            </div>
+            <p id="pwHelp" class="auth-help">Use 8+ characters with uppercase, lowercase, a number and a symbol.</p>
+          </div>
         </div>
+      </section>
+
+      <div class="workspace">
+        <aside class="sidebar sidebar-left">
+          <div class="section-label">Rooms</div>
+          <div class="room-list">
+            <button class="room-chip active" data-room="general"># general</button>
+            <button class="room-chip" data-room="gaming"># gaming</button>
+            <button class="room-chip" data-room="coursework"># coursework</button>
+            <button class="room-chip" data-room="random"># random</button>
+          </div>
+
+          <div class="join-card">
+            <div class="section-label" style="padding:0;margin-bottom:8px">Join a room</div>
+            <input id="room" class="mini-input" value="general" maxlength="50" aria-label="Room name" />
+            <div class="mini-actions">
+              <button id="btnJoin" class="mini-btn">Join</button>
+              <button id="btnLoad" class="mini-btn secondary">History</button>
+            </div>
+          </div>
+        </aside>
+
+        <section class="chat">
+          <div class="chat-head">
+            <div>
+              <div id="roomTitle" class="chat-room"># general</div>
+              <div class="chat-room-sub">Messages are stored in MongoDB</div>
+            </div>
+            <button id="btnLoadTop" class="history-btn">Load last 50</button>
+          </div>
+
+          <div id="log" class="log" aria-live="polite">
+            <div id="emptyState" class="empty-state">
+              <div class="empty-icon">A</div>
+              <b>Your room is ready</b>
+              Join <strong>#general</strong> and load recent messages to start chatting.
+            </div>
+          </div>
+
+          <div class="composer-wrap">
+            <div class="composer">
+              <input id="msg" placeholder="Type a message…" maxlength="2000" autocomplete="off" />
+              <button id="btnSend" class="send-btn" title="Send message" aria-label="Send message">↑</button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="sidebar sidebar-right">
+          <div class="section-label">Online users</div>
+          <div class="online-summary"><strong id="onlineCount">0</strong> people online</div>
+          <ul id="onlineList" class="online-list"></ul>
+        </aside>
       </div>
 
-      <!-- RIGHT: Presence -->
-      <div>
-        <h3 class="text-lg font-semibold mb-2">Online Users</h3>
-        <ul id="onlineList" class="border rounded p-3 h-80 overflow-auto bg-gray-50 text-sm space-y-1">
-          <!-- filled dynamically -->
-        </ul>
-      </div>
-    </div>
-  </div>
+      <p class="token-hidden"><b>Token:</b> <span id="token">(none)</span></p>
+    </section>
+  </main>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     let token = null;
     let socket = null;
-    // Remember confirmed rooms for this login, and track which are ready now.
+    let currentUser = null;
     const joinedRooms = new Set();
     const readyRooms = new Set();
+    const userCache = new Map();
 
     const $ = (id) => document.getElementById(id);
-    const log = (m) => { const d = document.createElement("div"); d.textContent = m; $("log").appendChild(d); $("log").scrollTop = $("log").scrollHeight; };
 
-    // Simple client-side password hint (server still enforces)
-    const strongPw = (pw) => pw.length >= 8 && /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /\d/.test(pw) && /[^A-Za-z0-9]/.test(pw);
+    function removeEmptyState(){
+      const empty = $("emptyState");
+      if(empty) empty.remove();
+    }
+
+    function setConnectionStatus(message, connected=false){
+      $("connectionStatus").textContent = message;
+      $("statusPill").classList.toggle("connected", connected);
+    }
+
+    function updateAuthUi(){
+      $("authPanel").classList.toggle("authenticated", Boolean(token));
+      $("btnLogout").style.display = token ? "inline-flex" : "none";
+    }
+
+    function formatTime(value){
+      if(!value) return "";
+      const d = new Date(value);
+      if(Number.isNaN(d.getTime())) return "";
+      return d.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+    }
+
+    function initials(name){
+      const clean = String(name || "U").trim();
+      if(!clean) return "U";
+      return clean.split(/s+/).slice(0,2).map(part => part[0]).join("").toUpperCase();
+    }
+
+    function log(m){
+      removeEmptyState();
+      const d = document.createElement("div");
+      d.textContent = m;
+      d.className = "system-message" + (/error|failed|invalid|expired|offline|not sent/i.test(String(m)) ? " error" : "");
+      $("log").appendChild(d);
+      $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    function renderChatMessage(message){
+      removeEmptyState();
+
+      const fromValue = message.from && typeof message.from === "object" ? (message.from._id || message.from.id) : message.from;
+      const senderName = message.senderName || (message.from && typeof message.from === "object" ? message.from.name : null) || userCache.get(String(fromValue)) || "User";
+      const mine = Boolean(currentUser && fromValue && String(currentUser.id) === String(fromValue));
+
+      const row = document.createElement("div");
+      row.className = "message-row " + (mine ? "mine" : "theirs");
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.textContent = initials(senderName);
+
+      const wrap = document.createElement("div");
+      wrap.className = "bubble-wrap";
+
+      const meta = document.createElement("div");
+      meta.className = "sender-line";
+
+      const name = document.createElement("span");
+      name.className = "sender-name";
+      name.textContent = mine ? "You" : senderName;
+
+      const time = document.createElement("span");
+      time.className = "message-time";
+      time.textContent = formatTime(message.createdAt);
+
+      meta.appendChild(name);
+      if(time.textContent) meta.appendChild(time);
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = message.body;
+
+      wrap.appendChild(meta);
+      wrap.appendChild(bubble);
+      row.appendChild(avatar);
+      row.appendChild(wrap);
+      $("log").appendChild(row);
+      $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    function setActiveRoom(room){
+      const clean = room || "general";
+      $("room").value = clean;
+      $("roomTitle").textContent = "# " + clean;
+      document.querySelectorAll(".room-chip").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.room === clean);
+      });
+    }
+
+    const strongPw = (pw) => pw.length >= 8 && /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /d/.test(pw) && /[^A-Za-z0-9]/.test(pw);
     $("rPass").addEventListener("input", () => {
-      $("pwHelp").className = strongPw($("rPass").value) ? "text-xs text-green-600 mb-4" : "text-xs text-gray-500 mb-4";
+      $("pwHelp").style.color = strongPw($("rPass").value) ? "#19995a" : "#74788a";
     });
 
-    // JWT helpers
-    function decodeJwt(t){ try{ const p=t.split(".")[1]; return JSON.parse(atob(p.replace(/-/g,"+").replace(/_/g,"/"))); }catch{ return null; } }
-    function isExpired(t){ const p=decodeJwt(t); if(!p||!p.exp) return false; return (p.exp*1000)<=Date.now(); }
+    function decodeJwt(t){
+      try{
+        const p = t.split(".")[1];
+        return JSON.parse(atob(p.replace(/-/g,"+").replace(/_/g,"/")));
+      }catch{
+        return null;
+      }
+    }
 
-    // Token save/clear
+    function isExpired(t){
+      const p = decodeJwt(t);
+      if(!p || !p.exp) return false;
+      return (p.exp * 1000) <= Date.now();
+    }
+
     function closeSocket(){
       if(socket){
         socket.removeAllListeners();
-        socket.disconnect(); // Also cancels reconnect attempts when already offline.
-        socket=null;
+        socket.disconnect();
+        socket = null;
       }
       readyRooms.clear();
     }
-    function saveToken(t){
+
+    function saveToken(t, user=null){
       closeSocket();
       joinedRooms.clear();
-      token=t;
-      localStorage.setItem("adda_token",t);
-      $("token").textContent=t.slice(0,24)+"...";
+      token = t;
+      localStorage.setItem("adda_token", t);
+      $("token").textContent = t.slice(0,24) + "...";
+      const payload = decodeJwt(t);
+      currentUser = user || (payload ? { id:payload.id, email:payload.email } : null);
+      updateAuthUi();
     }
+
     function hardLogout(msg="Logged out."){
       localStorage.removeItem("adda_token");
-      token=null;
+      token = null;
+      currentUser = null;
       closeSocket();
       joinedRooms.clear();
-      $("token").textContent="(none)";
-      $("connectionStatus").textContent="Not connected. Please log in.";
+      userCache.clear();
+      $("token").textContent = "(none)";
+      $("onlineList").innerHTML = "";
+      $("onlineCount").textContent = "0";
+      setConnectionStatus("Not connected", false);
+      updateAuthUi();
       log(msg);
     }
 
-    // Register
     $("btnRegister").onclick = async () => {
       try{
         if(!strongPw($("rPass").value)) return log("Register error: Weak password (see rules).");
-        const res=await fetch("/api/auth/register",{ method:"POST", headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ name:$("rName").value, email:$("rEmail").value, password:$("rPass").value }) });
-        const data=await res.json();
-        if(!res.ok) return log("Register error: "+JSON.stringify(data));
-        saveToken(data.token); connect();
-      }catch(e){ log("Register error: "+e.message); }
+        const res = await fetch("/api/auth/register", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify({
+            name:$("rName").value,
+            email:$("rEmail").value,
+            password:$("rPass").value
+          })
+        });
+        const data = await res.json();
+        if(!res.ok) return log("Register error: " + JSON.stringify(data));
+        saveToken(data.token, data.user);
+        connect();
+      }catch(e){
+        log("Register error: " + e.message);
+      }
     };
 
-    // Login
     $("btnLogin").onclick = async () => {
       try{
-        const res=await fetch("/api/auth/login",{ method:"POST", headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ email:$("lEmail").value, password:$("lPass").value }) });
-        const data=await res.json();
-        if(!res.ok) return log("Login error: "+JSON.stringify(data));
-        saveToken(data.token); connect();
-      }catch(e){ log("Login error: "+e.message); }
+        const res = await fetch("/api/auth/login", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify({ email:$("lEmail").value, password:$("lPass").value })
+        });
+        const data = await res.json();
+        if(!res.ok) return log("Login error: " + JSON.stringify(data));
+        saveToken(data.token, data.user);
+        connect();
+      }catch(e){
+        log("Login error: " + e.message);
+      }
     };
 
-    // Logout
     $("btnLogout").onclick = () => hardLogout("Logged out by user.");
 
-    // Presence UI
     let onlineSet = new Set();
+
     function renderPresence(listIds){
       const ul = $("onlineList");
       ul.innerHTML = "";
-      if(!Array.isArray(listIds) || listIds.length===0){ ul.innerHTML = "<li class='text-gray-500'>Nobody online</li>"; return; }
-      fetch("/api/users/lookup",{ method:"POST", headers:{ "Content-Type":"application/json", Authorization:`Bearer ${token}` }, body: JSON.stringify({ ids: listIds }) })
-        .then(r=>r.json())
-        .then(users=>{
-          users.sort((a,b)=>a.name.localeCompare(b.name));
-          users.forEach(u=>{
-            const li=document.createElement("li");
-            li.textContent = "• " + u.name;
-            li.className = "text-green-700";
+      const uniqueIds = Array.from(new Set(Array.isArray(listIds) ? listIds.map(String) : []));
+      $("onlineCount").textContent = String(uniqueIds.length);
+
+      if(uniqueIds.length === 0){
+        const li = document.createElement("li");
+        li.className = "system-message";
+        li.textContent = "Nobody online";
+        ul.appendChild(li);
+        return;
+      }
+
+      fetch("/api/users/lookup", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", Authorization:"Bearer " + token },
+        body:JSON.stringify({ ids:uniqueIds })
+      })
+        .then(r => r.json())
+        .then(users => {
+          users.sort((a,b) => a.name.localeCompare(b.name));
+          users.forEach(u => {
+            userCache.set(String(u._id || u.id), u.name);
+            if(currentUser && String(currentUser.id) === String(u._id || u.id)) currentUser.name = u.name;
+
+            const li = document.createElement("li");
+            li.className = "online-user";
+
+            const avatar = document.createElement("div");
+            avatar.className = "presence-avatar";
+            avatar.textContent = initials(u.name);
+
+            const text = document.createElement("div");
+            const name = document.createElement("div");
+            name.className = "presence-name";
+            name.textContent = u.name;
+            const state = document.createElement("div");
+            state.className = "presence-state";
+            state.textContent = "Online";
+
+            text.appendChild(name);
+            text.appendChild(state);
+            li.appendChild(avatar);
+            li.appendChild(text);
             ul.appendChild(li);
           });
-        }).catch(()=>{ ul.innerHTML="<li class='text-gray-500'>Online list unavailable</li>"; });
+        })
+        .catch(() => {
+          ul.innerHTML = "";
+          const li = document.createElement("li");
+          li.className = "system-message error";
+          li.textContent = "Online list unavailable";
+          ul.appendChild(li);
+        });
     }
 
-    // Socket connect
+    async function resolveSenderName(userId){
+      if(!userId) return "User";
+      const key = String(userId);
+      if(userCache.has(key)) return userCache.get(key);
+      if(currentUser && String(currentUser.id) === key && currentUser.name) return currentUser.name;
+
+      try{
+        const res = await fetch("/api/users/lookup", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json", Authorization:"Bearer " + token },
+          body:JSON.stringify({ ids:[key] })
+        });
+        if(!res.ok) return "User";
+        const users = await res.json();
+        const user = users[0];
+        if(user){
+          userCache.set(key, user.name);
+          return user.name;
+        }
+      }catch{}
+      return "User";
+    }
+
     function connect(){
       if(!token) return log("No token yet. Please login/register.");
       if(isExpired(token)) return hardLogout("Session expired. Please login again.");
+
       closeSocket();
-      $("connectionStatus").textContent="Connecting…";
+      setConnectionStatus("Connecting…", false);
 
       socket = io("/", { auth:{ token } });
+
       socket.on("connect", () => {
         readyRooms.clear();
-        $("connectionStatus").textContent="Connected.";
+        setConnectionStatus("Live", true);
         log("Socket connected.");
-        // Socket.IO creates a new server connection after a network interruption.
-        // Rejoin rooms only after that connection is ready.
         for(const room of joinedRooms) socket.emit("room:join", room);
       });
+
       socket.on("room:joined", (room) => {
         joinedRooms.add(room);
         readyRooms.add(room);
-        log("Joined room: "+room);
-      });
-      socket.on("disconnect", () => {
-        readyRooms.clear();
-        $("connectionStatus").textContent="Disconnected. Waiting for a connection; your draft is kept.";
+        setActiveRoom(room);
+        log("Joined #" + room);
       });
 
-      socket.on("presence:init", (ids)=>{ onlineSet = new Set(ids); renderPresence(Array.from(onlineSet)); });
-      socket.on("presence:update", ({ userId, isOnline })=>{
-        if(isOnline) onlineSet.add(userId); else onlineSet.delete(userId);
+      socket.on("room:error", (data) => log("Room error: " + (data && data.error ? data.error : "Unable to join room.")));
+
+      socket.on("disconnect", () => {
+        readyRooms.clear();
+        setConnectionStatus("Reconnecting…", false);
+        log("Disconnected. Your draft is kept.");
+      });
+
+      socket.on("presence:init", (ids) => {
+        onlineSet = new Set(ids);
         renderPresence(Array.from(onlineSet));
       });
 
-      socket.on("message:new", (m)=> log(`${m.room} | ${m.from}: ${m.body}`));
+      socket.on("presence:update", ({ userId, isOnline }) => {
+        if(isOnline) onlineSet.add(userId);
+        else onlineSet.delete(userId);
+        renderPresence(Array.from(onlineSet));
+      });
 
-      socket.on("connect_error", (e)=>{
+      socket.on("message:new", async (m) => {
+        const senderName = await resolveSenderName(m.from);
+        renderChatMessage({ ...m, senderName });
+      });
+
+      socket.on("message:error", (data) => log("Message error: " + (data && data.error ? data.error : "Message could not be sent.")));
+
+      socket.on("connect_error", (e) => {
         readyRooms.clear();
-        $("connectionStatus").textContent="Connection failed. Check your network or log in again.";
-        log("Socket error: "+e.message);
+        setConnectionStatus("Connection failed", false);
+        log("Socket error: " + e.message);
         if(String(e.message).toLowerCase().includes("invalid token")) hardLogout("Token invalid. Please login again.");
       });
     }
 
-    // Join room
-    $("btnJoin").onclick = ()=>{
+    $("btnJoin").onclick = () => {
       if(!token) return log("Login first. Token is empty.");
       if(isExpired(token)) return hardLogout("Session expired. Please login again.");
-      if(!socket?.connected) return log("Not connected. Wait for the connection before joining a room.");
-      const room = $("room").value || "general";
+      if(!socket || !socket.connected) return log("Not connected. Wait for the connection before joining a room.");
+      const room = ($("room").value || "general").trim();
+      setActiveRoom(room);
       socket.emit("room:join", room);
     };
 
-    // Load history
-    $("btnLoad").onclick = async ()=>{
+    $("btnLoad").onclick = async () => {
       if(!token) return log("Login first. Token is empty.");
       if(isExpired(token)) return hardLogout("Session expired. Please login again.");
-      const room = $("room").value || "general";
+      const room = ($("room").value || "general").trim();
+      setActiveRoom(room);
+
       try{
-        const res = await fetch(`/api/messages/${room}`, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch("/api/messages/" + encodeURIComponent(room), {
+          headers:{ Authorization:"Bearer " + token }
+        });
         const data = await res.json();
-        if(res.status===401) return hardLogout("Auth failed (401). Please login again.");
-        if(!res.ok) return log("Load error: "+JSON.stringify(data));
-        data.forEach(m=> log(`${room} | ${m.from?.name || m.from}: ${m.body}`));
-      }catch(e){ log("Load error: "+e.message); }
+        if(res.status === 401) return hardLogout("Auth failed (401). Please login again.");
+        if(!res.ok) return log("Load error: " + JSON.stringify(data));
+
+        $("log").innerHTML = "";
+        if(data.length === 0){
+          log("No saved messages in #" + room + " yet.");
+          return;
+        }
+
+        data.forEach(m => {
+          const userId = m.from && typeof m.from === "object" ? (m.from._id || m.from.id) : m.from;
+          const senderName = m.from && typeof m.from === "object" ? m.from.name : userCache.get(String(userId));
+          if(senderName && userId) userCache.set(String(userId), senderName);
+          renderChatMessage({ ...m, from:userId, senderName });
+        });
+      }catch(e){
+        log("Load error: " + e.message);
+      }
     };
 
-    // Send
-    $("btnSend").onclick = ()=>{
+    $("btnLoadTop").onclick = () => $("btnLoad").click();
+
+    $("btnSend").onclick = () => {
       if(!token) return log("Login first. Token is empty.");
       if(isExpired(token)) return hardLogout("Session expired. Please login again.");
-      if(!socket?.connected) return log("Message not sent: you are offline. Your draft is kept.");
-      const room = $("room").value || "general";
+      if(!socket || !socket.connected) return log("Message not sent: you are offline. Your draft is kept.");
+
+      const room = ($("room").value || "general").trim();
       if(!readyRooms.has(room)) return log("Message not sent: join this room and wait for confirmation. Your draft is kept.");
-      const body = $("msg").value;
+
+      const body = $("msg").value.trim();
       if(!body) return;
       socket.emit("message:send", { room, body });
       $("msg").value = "";
     };
 
-    // Auto-login on refresh
-    window.addEventListener("DOMContentLoaded", ()=>{
+    $("msg").addEventListener("keydown", (e) => {
+      if(e.key === "Enter" && !e.shiftKey){
+        e.preventDefault();
+        $("btnSend").click();
+      }
+    });
+
+    document.querySelectorAll(".room-chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        setActiveRoom(btn.dataset.room);
+        if(token && socket && socket.connected){
+          socket.emit("room:join", btn.dataset.room);
+          setTimeout(() => $("btnLoad").click(), 120);
+        }
+      });
+    });
+
+    $("room").addEventListener("input", () => setActiveRoom(($("room").value || "general").trim()));
+
+    window.addEventListener("DOMContentLoaded", () => {
+      updateAuthUi();
+      setActiveRoom("general");
+
       const saved = localStorage.getItem("adda_token");
       if(saved){
-        if(isExpired(saved)){ hardLogout("Saved session expired. Please login again."); }
-        else { saveToken(saved); connect(); log("Restored session from saved token."); }
+        if(isExpired(saved)){
+          hardLogout("Saved session expired. Please login again.");
+        }else{
+          saveToken(saved);
+          connect();
+          log("Restored session from saved token.");
+        }
       }
     });
   </script>
