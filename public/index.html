@@ -1,10 +1,9 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Adda Box Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root{
       --ink:#171827;
@@ -12,25 +11,26 @@
       --line:#e7e8f0;
       --panel:#ffffff;
       --soft:#f7f6fc;
-      --lavender:#efe9ff;
       --purple:#7c2df4;
       --purple-dark:#6520d4;
       --green:#21a765;
-      --danger:#e04f5f;
+      --danger:#d94d60;
     }
 
     *{box-sizing:border-box}
+
+    html,body{min-height:100%}
 
     body{
       margin:0;
       min-height:100vh;
       color:var(--ink);
-      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       background:
-        radial-gradient(circle at 18% 18%, rgba(151,114,255,.20), transparent 32%),
-        radial-gradient(circle at 82% 14%, rgba(106,193,255,.20), transparent 30%),
-        radial-gradient(circle at 78% 82%, rgba(255,166,215,.22), transparent 30%),
-        linear-gradient(135deg,#eef1ff 0%,#f7f3ff 48%,#f7edf9 100%);
+        radial-gradient(circle at 16% 14%,rgba(151,114,255,.17),transparent 31%),
+        radial-gradient(circle at 85% 12%,rgba(106,193,255,.16),transparent 29%),
+        radial-gradient(circle at 76% 84%,rgba(255,166,215,.18),transparent 30%),
+        linear-gradient(135deg,#f1f3ff 0%,#f8f5ff 48%,#f9f1f8 100%);
       overflow-x:hidden;
     }
 
@@ -39,36 +39,30 @@
       position:fixed;
       inset:0;
       pointer-events:none;
-      opacity:.34;
+      opacity:.24;
       background-image:
-        linear-gradient(30deg, rgba(124,45,244,.08) 12%, transparent 12.5%, transparent 87%, rgba(124,45,244,.08) 87.5%, rgba(124,45,244,.08)),
-        linear-gradient(150deg, rgba(124,45,244,.08) 12%, transparent 12.5%, transparent 87%, rgba(124,45,244,.08) 87.5%, rgba(124,45,244,.08));
-      background-size:90px 156px;
-      background-position:0 0, 0 0;
-      mask-image:linear-gradient(to bottom,rgba(0,0,0,.7),transparent 92%);
+        linear-gradient(30deg,rgba(124,45,244,.08) 12%,transparent 12.5%,transparent 87%,rgba(124,45,244,.08) 87.5%,rgba(124,45,244,.08)),
+        linear-gradient(150deg,rgba(124,45,244,.08) 12%,transparent 12.5%,transparent 87%,rgba(124,45,244,.08) 87.5%,rgba(124,45,244,.08));
+      background-size:92px 160px;
+      mask-image:linear-gradient(to bottom,rgba(0,0,0,.70),transparent 94%);
     }
 
     button,input{font:inherit}
-
-    button{
-      border:0;
-      cursor:pointer;
-      transition:.18s ease;
-    }
-
+    button{border:0;cursor:pointer;transition:.18s ease}
     button:active{transform:translateY(1px)}
 
     .page-shell{
       position:relative;
-      width:min(1180px,calc(100% - 32px));
-      margin:34px auto;
       z-index:1;
+      width:min(1660px,94vw);
+      margin:18px auto;
     }
 
     .app-card{
-      background:rgba(255,255,255,.90);
-      border:1px solid rgba(255,255,255,.78);
-      box-shadow:0 28px 70px rgba(65,41,104,.14);
+      min-height:calc(100vh - 36px);
+      background:rgba(255,255,255,.94);
+      border:1px solid rgba(255,255,255,.84);
+      box-shadow:0 28px 80px rgba(61,43,91,.18);
       backdrop-filter:blur(18px);
       border-radius:28px;
       overflow:hidden;
@@ -80,149 +74,208 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
+      gap:18px;
       border-bottom:1px solid var(--line);
-      background:rgba(255,255,255,.86);
-      gap:16px;
+      background:rgba(255,255,255,.92);
     }
 
-    .brand-wrap{display:flex;align-items:center;gap:12px;min-width:0}
+    .brand-wrap{display:flex;align-items:center;gap:13px;min-width:0}
     .brand-mark{
-      width:42px;height:42px;border-radius:14px;
-      display:grid;place-items:center;
+      width:44px;height:44px;border-radius:14px;
+      display:grid;place-items:center;flex:0 0 auto;
+      color:#fff;font-weight:900;font-size:18px;
       background:linear-gradient(135deg,#8d42f7,#6e20e6);
-      color:white;font-weight:800;font-size:18px;
-      box-shadow:0 8px 20px rgba(124,45,244,.25);
-      flex:0 0 auto;
+      box-shadow:0 9px 22px rgba(124,45,244,.25);
+    }
+    .brand-title{font-size:19px;font-weight:850;letter-spacing:-.025em}
+    .brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+    .top-actions{display:flex;align-items:center;gap:9px}
+
+    .profile-chip{
+      display:none;
+      align-items:center;
+      gap:9px;
+      min-width:0;
+      padding:6px 10px 6px 7px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fafafe;
+    }
+    .profile-chip.show{display:flex}
+    .profile-avatar{
+      width:32px;height:32px;border-radius:11px;
+      display:grid;place-items:center;flex:0 0 auto;
+      background:#ece2ff;color:#7023dc;
+      font-size:11px;font-weight:900;
+    }
+    .profile-copy{min-width:0}
+    .profile-name{
+      max-width:120px;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      font-size:11px;font-weight:850;color:#353947;
+    }
+    .profile-meta{
+      max-width:120px;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      margin-top:1px;font-size:9px;color:#9296a2;
     }
 
-    .brand-title{font-size:18px;font-weight:800;letter-spacing:-.02em}
-    .brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
-
-    .top-actions{display:flex;align-items:center;gap:10px}
     .status-pill{
       display:flex;align-items:center;gap:7px;
+      padding:8px 11px;
+      border-radius:999px;
       background:#f7f8fb;border:1px solid var(--line);
-      color:#5e6371;border-radius:999px;
-      padding:8px 12px;font-size:12px;font-weight:650;
+      color:#606573;font-size:11px;font-weight:750;
       white-space:nowrap;
     }
     .status-dot{width:8px;height:8px;border-radius:50%;background:#a0a4af}
-    .status-pill.connected .status-dot{background:var(--green);box-shadow:0 0 0 4px rgba(33,167,101,.10)}
+    .status-pill.connected .status-dot{
+      background:var(--green);
+      box-shadow:0 0 0 4px rgba(33,167,101,.10);
+    }
 
     .ghost-btn{
-      padding:9px 13px;border-radius:12px;
-      background:#f6f7fb;color:#4c5260;font-size:12px;font-weight:700;
+      display:none;
+      align-items:center;justify-content:center;
+      padding:9px 12px;border-radius:11px;
+      background:#f6f7fa;color:#555b68;
       border:1px solid var(--line);
+      font-size:11px;font-weight:800;
     }
-    .ghost-btn:hover{background:#efeff6}
+    .ghost-btn:hover{background:#eeeff4}
 
     .auth-panel{
       padding:18px 24px 20px;
       border-bottom:1px solid var(--line);
-      background:linear-gradient(180deg,rgba(247,245,255,.96),rgba(255,255,255,.92));
+      background:linear-gradient(180deg,rgba(247,245,255,.98),rgba(255,255,255,.96));
     }
     .auth-panel.authenticated{display:none}
-    .auth-title-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:13px}
-    .auth-title{font-weight:800;font-size:14px}
-    .auth-hint{font-size:12px;color:var(--muted)}
-
-    .auth-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    .auth-box{
-      background:white;border:1px solid var(--line);
-      border-radius:17px;padding:14px;
+    .auth-title{font-size:14px;font-weight:850}
+    .auth-hint{font-size:11px;color:var(--muted);margin-top:3px}
+    .auth-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:13px}
+    .auth-box{padding:14px;background:#fff;border:1px solid var(--line);border-radius:16px}
+    .auth-box-title{
+      margin-bottom:9px;
+      color:#666b78;font-size:10px;font-weight:900;
+      letter-spacing:.08em;text-transform:uppercase;
     }
-    .auth-box-title{font-size:12px;font-weight:800;color:#5d6270;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
     .field-row{display:flex;gap:8px;align-items:center}
     .field{
-      min-width:0;width:100%;
-      border:1px solid #e0e2ec;background:#fbfbfd;
-      border-radius:12px;padding:10px 11px;color:#262938;
-      outline:none;transition:.18s ease;
+      width:100%;min-width:0;
+      padding:10px 11px;
+      border:1px solid #dfe1ea;border-radius:11px;
+      outline:none;background:#fbfbfd;color:#252837;
+      font-size:12px;transition:.18s ease;
     }
-    .field:focus{border-color:#b991ff;box-shadow:0 0 0 3px rgba(124,45,244,.10);background:white}
+    .field:focus{border-color:#b991ff;box-shadow:0 0 0 3px rgba(124,45,244,.10);background:#fff}
     .primary-btn{
-      border-radius:12px;
       padding:10px 14px;
-      color:white;font-size:12px;font-weight:800;
-      background:linear-gradient(135deg,#8b3df7,#7325e9);
+      border-radius:11px;
+      color:#fff;background:linear-gradient(135deg,#8b3df7,#7325e9);
       box-shadow:0 7px 18px rgba(124,45,244,.20);
-      white-space:nowrap;
+      white-space:nowrap;font-size:11px;font-weight:850;
     }
     .primary-btn:hover{filter:brightness(.97);transform:translateY(-1px)}
-    .auth-help{font-size:11px;color:var(--muted);margin:9px 2px 0}
+    .auth-help{margin:8px 2px 0;font-size:10px;color:var(--muted)}
 
     .workspace{
+      height:calc(100vh - 116px);
+      min-height:650px;
       display:grid;
-      grid-template-columns:220px minmax(0,1fr) 220px;
-      min-height:680px;
+      grid-template-columns:250px minmax(0,1fr) 260px;
     }
 
     .sidebar{
-      background:rgba(249,249,252,.88);
+      min-width:0;
       padding:20px 14px;
+      background:rgba(249,249,252,.90);
     }
     .sidebar-left{border-right:1px solid var(--line)}
     .sidebar-right{border-left:1px solid var(--line)}
 
     .section-label{
-      padding:0 8px;
-      margin-bottom:12px;
-      color:#9a9eaa;font-size:10px;font-weight:850;
+      padding:0 8px;margin-bottom:12px;
+      color:#999daa;font-size:10px;font-weight:900;
       letter-spacing:.09em;text-transform:uppercase;
     }
 
     .room-list{display:flex;flex-direction:column;gap:7px}
     .room-chip{
-      display:flex;align-items:center;gap:9px;
-      width:100%;padding:11px 12px;border-radius:12px;
-      background:white;color:#555b69;
-      border:1px solid #ececf3;
-      font-size:13px;font-weight:700;text-align:left;
+      width:100%;
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+      padding:11px 12px;
+      border:1px solid #ececf3;border-radius:12px;
+      background:#fff;color:#575d6a;
+      text-align:left;font-size:12px;font-weight:750;
     }
-    .room-chip:hover{border-color:#d7c4ff;background:#fbf9ff;color:var(--purple)}
+    .room-chip:hover{border-color:#d8c5ff;background:#fbf9ff;color:var(--purple)}
     .room-chip.active{
-      background:#efe6ff;color:#6f20e6;border-color:#e5d4ff;
+      color:#6f20e6;background:#efe6ff;border-color:#e4d2ff;
       box-shadow:0 6px 15px rgba(124,45,244,.08);
     }
+    .room-symbol{opacity:.70}
+    .room-chip.active .room-symbol{opacity:1}
 
     .join-card{
       margin-top:18px;padding:12px;
-      border-radius:14px;background:white;border:1px solid var(--line);
+      border:1px solid var(--line);border-radius:14px;background:#fff;
     }
     .mini-input{
-      width:100%;border:1px solid var(--line);border-radius:10px;
-      padding:9px 10px;background:#fafafd;outline:none;font-size:12px;
+      width:100%;padding:9px 10px;
+      border:1px solid var(--line);border-radius:10px;
+      background:#fafafd;outline:none;font-size:11px;
     }
     .mini-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
     .mini-btn{
-      border-radius:9px;padding:8px 7px;
-      font-size:11px;font-weight:800;
+      padding:8px 7px;border-radius:9px;
       background:#f2edff;color:#6c25dc;
+      font-size:10px;font-weight:850;
     }
-    .mini-btn.secondary{background:#f4f5f8;color:#59606e}
+    .mini-btn.secondary{background:#f4f5f8;color:#5a606d}
     .mini-btn:hover{filter:brightness(.97)}
 
+    .profile-card{
+      display:none;
+      margin-top:auto;
+      padding:12px;
+      border:1px solid var(--line);border-radius:14px;background:#fff;
+    }
+
     .chat{
-      display:flex;flex-direction:column;min-width:0;background:rgba(255,255,255,.86);
+      min-width:0;
+      display:flex;flex-direction:column;
+      background:rgba(255,255,255,.90);
     }
 
     .chat-head{
       min-height:72px;padding:0 22px;
-      display:flex;align-items:center;justify-content:space-between;
+      display:flex;align-items:center;justify-content:space-between;gap:14px;
       border-bottom:1px solid var(--line);
     }
-    .chat-room{font-size:15px;font-weight:850}
-    .chat-room-sub{font-size:11px;color:var(--muted);margin-top:3px}
+    .chat-room{font-size:17px;font-weight:900;letter-spacing:-.015em}
+    .chat-room-sub{margin-top:3px;color:var(--muted);font-size:10px}
     .history-btn{
-      background:#f5f1ff;color:#6c25dc;border:1px solid #eadfff;
-      border-radius:10px;padding:8px 11px;font-size:11px;font-weight:800;
+      padding:8px 11px;border-radius:10px;
+      color:#6c25dc;background:#f5f1ff;border:1px solid #eadfff;
+      font-size:10px;font-weight:850;
     }
 
+    .notice-bar{
+      display:none;
+      margin:12px 20px 0;
+      padding:9px 12px;
+      border:1px solid #e5ddfa;border-radius:11px;
+      background:#f8f5ff;color:#6a4e8e;
+      font-size:10px;
+    }
+    .notice-bar.show{display:block}
+    .notice-bar.error{background:#fff3f5;border-color:#ffd9df;color:#a83c4b}
+
     .log{
-      flex:1;
-      height:520px;
+      flex:1;min-height:0;
       overflow-y:auto;
-      padding:22px 22px 14px;
+      padding:22px 24px 18px;
       display:flex;flex-direction:column;gap:12px;
       scroll-behavior:smooth;
     }
@@ -230,141 +283,161 @@
     .log::-webkit-scrollbar-thumb{background:#e0d9ec;border-radius:99px}
 
     .empty-state{
-      margin:auto;text-align:center;color:#8e93a1;
-      max-width:310px;padding:34px 18px;
+      margin:auto;
+      max-width:340px;padding:36px 18px;
+      text-align:center;color:#8b909e;font-size:12px;
     }
     .empty-icon{
-      width:54px;height:54px;border-radius:18px;
-      display:grid;place-items:center;margin:0 auto 12px;
-      background:#f3edff;color:#7426e8;font-weight:900;font-size:22px;
+      width:58px;height:58px;margin:0 auto 13px;
+      display:grid;place-items:center;
+      border-radius:19px;background:#f2ebff;color:#7225df;
+      font-size:22px;font-weight:900;
     }
-    .empty-state b{display:block;color:#444958;margin-bottom:5px}
+    .empty-state b{display:block;margin-bottom:5px;color:#404554;font-size:13px}
+    .empty-state strong{color:#6d26d8}
 
     .system-message{
       align-self:center;
       max-width:86%;
       padding:7px 10px;border-radius:999px;
-      color:#818694;background:#f5f6f9;
-      border:1px solid #eceef3;
-      font-size:11px;text-align:center;
+      background:#f5f6f9;border:1px solid #eceef3;
+      color:#818694;font-size:10px;text-align:center;
     }
-    .system-message.error{color:#b23b4a;background:#fff1f3;border-color:#ffdce1}
+    .system-message.error{background:#fff1f3;border-color:#ffdce1;color:#b23b4a}
+    .system-message.diagnostic{display:none}
+
+    .date-separator{
+      display:flex;align-items:center;gap:10px;
+      color:#a0a4af;font-size:9px;font-weight:750;
+      margin:3px 0;
+    }
+    .date-separator::before,.date-separator::after{
+      content:"";height:1px;flex:1;background:#f0f0f4;
+    }
 
     .message-row{
-      display:flex;gap:9px;align-items:flex-end;
-      max-width:82%;
+      max-width:76%;
+      display:flex;align-items:flex-end;gap:9px;
     }
     .message-row.mine{align-self:flex-end;flex-direction:row-reverse}
     .message-row.theirs{align-self:flex-start}
 
     .avatar{
-      width:30px;height:30px;border-radius:50%;
-      display:grid;place-items:center;flex:0 0 auto;
-      background:#eee3ff;color:#7228dc;
-      font-size:11px;font-weight:850;
+      width:32px;height:32px;flex:0 0 auto;
+      display:grid;place-items:center;
+      border-radius:50%;background:#eee3ff;color:#7228dc;
+      font-size:10px;font-weight:900;
     }
-    .message-row.mine .avatar{background:#7c2df4;color:white}
-
+    .message-row.mine .avatar{background:#7c2df4;color:#fff}
     .bubble-wrap{min-width:0}
     .sender-line{
       display:flex;align-items:center;gap:7px;
-      font-size:10px;color:#818694;margin:0 4px 4px;
+      margin:0 4px 4px;
+      color:#8a8f9d;font-size:9px;
     }
     .message-row.mine .sender-line{justify-content:flex-end}
-    .sender-name{font-weight:800;color:#6f27d9}
+    .sender-name{font-weight:900;color:#6f27d9}
     .message-row.mine .sender-name{color:#7952b8}
-    .message-time{font-size:9px;color:#a2a6b1}
+    .message-time{color:#a3a7b1;font-size:8px}
 
     .bubble{
-      border-radius:16px 16px 16px 5px;
-      background:#f4effc;color:#303342;
-      padding:10px 12px;font-size:13px;line-height:1.45;
-      word-break:break-word;
+      padding:11px 13px;
       border:1px solid #eee4fb;
+      border-radius:17px 17px 17px 5px;
+      background:#f4effc;color:#303342;
+      font-size:12px;line-height:1.48;word-break:break-word;
     }
     .message-row.mine .bubble{
-      color:white;background:linear-gradient(135deg,#8b3ef5,#7324e8);
-      border-color:transparent;border-radius:16px 16px 5px 16px;
+      color:#fff;border-color:transparent;
+      border-radius:17px 17px 5px 17px;
+      background:linear-gradient(135deg,#8b3ef5,#7324e8);
       box-shadow:0 8px 18px rgba(124,45,244,.16);
     }
 
     .composer-wrap{
       padding:14px 18px 18px;
       border-top:1px solid var(--line);
-      background:rgba(255,255,255,.92);
+      background:rgba(255,255,255,.96);
     }
     .composer{
       display:flex;align-items:center;gap:8px;
-      background:#fafafd;border:1px solid #e7e7ef;
-      border-radius:15px;padding:7px 7px 7px 13px;
+      padding:7px 7px 7px 13px;
+      border:1px solid #e7e7ef;border-radius:15px;
+      background:#fafafd;
       box-shadow:0 6px 18px rgba(55,42,76,.04);
     }
     .composer input{
-      flex:1;min-width:0;border:0;background:transparent;
-      outline:none;padding:8px 3px;font-size:13px;color:#242735;
+      flex:1;min-width:0;
+      padding:8px 3px;
+      border:0;outline:none;background:transparent;color:#252837;
+      font-size:12px;
     }
     .send-btn{
-      width:42px;height:42px;border-radius:12px;
-      background:linear-gradient(135deg,#8b3df7,#7324e8);
-      color:white;font-size:18px;font-weight:900;
+      width:42px;height:42px;
       display:grid;place-items:center;
+      border-radius:12px;color:#fff;
+      background:linear-gradient(135deg,#8b3df7,#7324e8);
       box-shadow:0 8px 18px rgba(124,45,244,.22);
+      font-size:18px;font-weight:900;
     }
     .send-btn:hover{transform:translateY(-1px)}
 
     .online-summary{
-      margin:0 7px 14px;
-      padding:11px 12px;border-radius:12px;
-      background:white;border:1px solid var(--line);
-      font-size:11px;color:#747987;
+      margin:0 7px 14px;padding:11px 12px;
+      border:1px solid var(--line);border-radius:12px;background:#fff;
+      color:#757a88;font-size:10px;
     }
     .online-summary strong{color:#353947}
-    .online-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+    .online-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:5px}
     .online-user{
       display:flex;align-items:center;gap:9px;
       padding:9px 8px;border-radius:12px;
     }
     .online-user:hover{background:#f3effa}
     .presence-avatar{
-      width:34px;height:34px;border-radius:50%;
+      position:relative;
+      width:35px;height:35px;flex:0 0 auto;
       display:grid;place-items:center;
-      background:#ece2ff;color:#7428de;font-size:11px;font-weight:900;
-      position:relative;flex:0 0 auto;
+      border-radius:50%;background:#ece2ff;color:#7428de;
+      font-size:10px;font-weight:900;
     }
     .presence-avatar::after{
-      content:"";position:absolute;right:-1px;bottom:1px;
-      width:9px;height:9px;border-radius:50%;background:var(--green);
-      border:2px solid white;
+      content:"";
+      position:absolute;right:-1px;bottom:1px;
+      width:9px;height:9px;border-radius:50%;
+      background:var(--green);border:2px solid #fff;
     }
-    .presence-name{font-size:12px;font-weight:800;color:#424654}
-    .presence-state{font-size:10px;color:#8b909e;margin-top:1px}
+    .presence-name{font-size:11px;font-weight:850;color:#414654}
+    .presence-state{margin-top:1px;font-size:9px;color:#8b909e}
 
     .token-hidden{
-      position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);
-      white-space:nowrap;
+      position:absolute;width:1px;height:1px;overflow:hidden;
+      clip:rect(0,0,0,0);white-space:nowrap;
     }
 
-    @media (max-width:900px){
-      .workspace{grid-template-columns:190px minmax(0,1fr)}
+    @media (max-width:1100px){
+      .workspace{grid-template-columns:210px minmax(0,1fr)}
       .sidebar-right{display:none}
-      .auth-grid{grid-template-columns:1fr}
     }
 
-    @media (max-width:680px){
-      .page-shell{width:min(100% - 18px,620px);margin:9px auto}
-      .app-card{border-radius:20px}
-      .topbar{height:auto;padding:14px 16px;align-items:flex-start}
-      .brand-sub{display:none}
+    @media (max-width:760px){
+      .page-shell{width:min(100% - 16px,720px);margin:8px auto}
+      .app-card{min-height:calc(100vh - 16px);border-radius:20px}
+      .topbar{height:auto;min-height:68px;padding:12px 14px}
+      .brand-sub,.profile-copy{display:none}
       .top-actions{gap:6px}
+      .profile-chip{padding:5px}
       .status-pill{padding:7px 9px}
-      .workspace{display:flex;flex-direction:column;min-height:auto}
-      .sidebar-left{border-right:0;border-bottom:1px solid var(--line);padding:12px}
+      .workspace{height:auto;min-height:0;display:flex;flex-direction:column}
+      .sidebar-left{padding:12px;border-right:0;border-bottom:1px solid var(--line)}
       .room-list{display:grid;grid-template-columns:repeat(2,1fr)}
       .join-card{margin-top:10px}
-      .chat-head{min-height:64px;padding:0 16px}
-      .log{height:480px;padding:18px 14px 12px}
+      .chat{min-height:620px}
+      .chat-head{min-height:64px;padding:0 15px}
+      .log{min-height:430px;padding:18px 14px 12px}
       .composer-wrap{padding:10px 12px 14px}
       .auth-panel{padding:14px}
+      .auth-grid{grid-template-columns:1fr}
       .field-row{flex-wrap:wrap}
       .field-row .primary-btn{width:100%}
       .message-row{max-width:90%}
@@ -379,33 +452,40 @@
           <div class="brand-mark">A</div>
           <div>
             <div class="brand-title">Adda Box</div>
-            <div class="brand-sub">Real-time rooms, presence and chat history</div>
+            <div class="brand-sub">Real-time rooms, presence and persistent chat history</div>
           </div>
         </div>
 
         <div class="top-actions">
+          <div id="profileChip" class="profile-chip">
+            <div id="profileAvatar" class="profile-avatar">U</div>
+            <div class="profile-copy">
+              <div id="profileName" class="profile-name">User</div>
+              <div id="profileMeta" class="profile-meta">Signed in</div>
+            </div>
+          </div>
+
           <div id="statusPill" class="status-pill">
             <span class="status-dot"></span>
-            <span id="connectionStatus">Not connected</span>
+            <span id="connectionStatus">Not connected. Please log in.</span>
           </div>
+
           <button id="btnLogout" class="ghost-btn">Logout</button>
         </div>
       </header>
 
       <section id="authPanel" class="auth-panel">
-        <div class="auth-title-row">
-          <div>
-            <div class="auth-title">Welcome to Adda Box</div>
-            <div class="auth-hint">Sign in or create an account to enter the conversation.</div>
-          </div>
+        <div>
+          <div class="auth-title">Welcome to Adda Box</div>
+          <div class="auth-hint">Sign in or create an account to enter the conversation.</div>
         </div>
 
         <div class="auth-grid">
           <div class="auth-box">
             <div class="auth-box-title">Login</div>
             <div class="field-row">
-              <input id="lEmail" class="field" placeholder="Email address" />
-              <input id="lPass" class="field" type="password" placeholder="Password" />
+              <input id="lEmail" class="field" placeholder="Email address" autocomplete="email" />
+              <input id="lPass" class="field" type="password" placeholder="Password" autocomplete="current-password" />
               <button id="btnLogin" class="primary-btn">Login</button>
             </div>
           </div>
@@ -413,9 +493,9 @@
           <div class="auth-box">
             <div class="auth-box-title">Create account</div>
             <div class="field-row">
-              <input id="rName" class="field" placeholder="Name" />
-              <input id="rEmail" class="field" placeholder="Email" />
-              <input id="rPass" class="field" type="password" placeholder="Password" />
+              <input id="rName" class="field" placeholder="Name" autocomplete="name" />
+              <input id="rEmail" class="field" placeholder="Email" autocomplete="email" />
+              <input id="rPass" class="field" type="password" placeholder="Password" autocomplete="new-password" />
               <button id="btnRegister" class="primary-btn">Register</button>
             </div>
             <p id="pwHelp" class="auth-help">Use 8+ characters with uppercase, lowercase, a number and a symbol.</p>
@@ -427,10 +507,10 @@
         <aside class="sidebar sidebar-left">
           <div class="section-label">Rooms</div>
           <div class="room-list">
-            <button class="room-chip active" data-room="general"># general</button>
-            <button class="room-chip" data-room="gaming"># gaming</button>
-            <button class="room-chip" data-room="coursework"># coursework</button>
-            <button class="room-chip" data-room="random"># random</button>
+            <button class="room-chip active" data-room="general"><span><span class="room-symbol">#</span> general</span></button>
+            <button class="room-chip" data-room="gaming"><span><span class="room-symbol">#</span> gaming</span></button>
+            <button class="room-chip" data-room="coursework"><span><span class="room-symbol">#</span> coursework</span></button>
+            <button class="room-chip" data-room="random"><span><span class="room-symbol">#</span> random</span></button>
           </div>
 
           <div class="join-card">
@@ -447,16 +527,18 @@
           <div class="chat-head">
             <div>
               <div id="roomTitle" class="chat-room"># general</div>
-              <div class="chat-room-sub">Messages are stored in MongoDB</div>
+              <div class="chat-room-sub">MongoDB history • real-time Socket.IO messages</div>
             </div>
             <button id="btnLoadTop" class="history-btn">Load last 50</button>
           </div>
 
+          <div id="noticeBar" class="notice-bar" role="status"></div>
+
           <div id="log" class="log" aria-live="polite">
             <div id="emptyState" class="empty-state">
               <div class="empty-icon">A</div>
-              <b>Your room is ready</b>
-              Join <strong>#general</strong> and load recent messages to start chatting.
+              <b>Welcome to #general</b>
+              This is the beginning of the conversation. Join the room or load recent messages.
             </div>
           </div>
 
@@ -484,25 +566,101 @@
     let token = null;
     let socket = null;
     let currentUser = null;
+    let pendingHistoryRoom = null;
+    let noticeTimer = null;
+    let lastRenderedDateKey = null;
+
     const joinedRooms = new Set();
     const readyRooms = new Set();
     const userCache = new Map();
 
     const $ = (id) => document.getElementById(id);
 
+    function initials(name){
+      const clean = String(name || "U").trim();
+      if(!clean) return "U";
+      return clean.split(/\s+/).slice(0,2).map(part => part[0]).join("").toUpperCase();
+    }
+
+    function setProfile(user){
+      if(!user) return;
+      currentUser = { ...currentUser, ...user };
+      if($("profileName")) $("profileName").textContent = currentUser.name || currentUser.email || "User";
+      if($("profileMeta")) $("profileMeta").textContent = currentUser.email || "Signed in";
+      if($("profileAvatar")) $("profileAvatar").textContent = initials(currentUser.name || currentUser.email);
+      const chip = $("profileChip");
+      chip?.classList?.toggle("show", Boolean(token));
+    }
+
+    function setConnectionStatus(message, connected=false){
+      if($("connectionStatus")) $("connectionStatus").textContent = message;
+      $("statusPill")?.classList?.toggle("connected", connected);
+    }
+
+    function updateAuthUi(){
+      $("authPanel")?.classList?.toggle("authenticated", Boolean(token));
+      $("profileChip")?.classList?.toggle("show", Boolean(token));
+      const logout = $("btnLogout");
+      if(logout && logout.style) logout.style.display = token ? "inline-flex" : "none";
+    }
+
+    function showNotice(message, type="info", timeout=2800){
+      const bar = $("noticeBar");
+      if(!bar) return;
+      bar.textContent = message;
+      bar.className = "notice-bar show" + (type === "error" ? " error" : "");
+      if(noticeTimer) clearTimeout(noticeTimer);
+      if(timeout){
+        noticeTimer = setTimeout(() => {
+          bar.className = "notice-bar";
+          bar.textContent = "";
+        }, timeout);
+      }
+    }
+
     function removeEmptyState(){
       const empty = $("emptyState");
       if(empty) empty.remove();
     }
 
-    function setConnectionStatus(message, connected=false){
-      $("connectionStatus").textContent = message;
-      $("statusPill").classList.toggle("connected", connected);
+    function showRoomWelcome(room, message){
+      const logEl = $("log");
+      if(!logEl) return;
+      logEl.innerHTML = "";
+      lastRenderedDateKey = null;
+
+      const empty = document.createElement("div");
+      empty.id = "emptyState";
+      empty.className = "empty-state";
+
+      const icon = document.createElement("div");
+      icon.className = "empty-icon";
+      icon.textContent = "#";
+
+      const title = document.createElement("b");
+      title.textContent = "Welcome to #" + room;
+
+      const copy = document.createElement("div");
+      copy.textContent = message || "This is the beginning of the conversation.";
+
+      empty.appendChild(icon);
+      empty.appendChild(title);
+      empty.appendChild(copy);
+      logEl.appendChild(empty);
     }
 
-    function updateAuthUi(){
-      $("authPanel").classList.toggle("authenticated", Boolean(token));
-      $("btnLogout").style.display = token ? "inline-flex" : "none";
+    function log(message, visible=true){
+      const d = document.createElement("div");
+      d.textContent = message;
+      const isError = /error|failed|invalid|expired|offline|not sent|auth/i.test(String(message));
+      d.className = "system-message" + (isError ? " error" : "") + (visible ? "" : " diagnostic");
+      if(!visible && d.style) d.style.display = "none";
+
+      if(visible) removeEmptyState();
+      $("log").appendChild(d);
+      $("log").scrollTop = $("log").scrollHeight;
+
+      if(visible) showNotice(message, isError ? "error" : "info");
     }
 
     function formatTime(value){
@@ -512,27 +670,56 @@
       return d.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
     }
 
-    function initials(name){
-      const clean = String(name || "U").trim();
-      if(!clean) return "U";
-      return clean.split(/s+/).slice(0,2).map(part => part[0]).join("").toUpperCase();
+    function dateKey(value){
+      const d = value ? new Date(value) : new Date();
+      if(Number.isNaN(d.getTime())) return "";
+      return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
     }
 
-    function log(m){
-      removeEmptyState();
-      const d = document.createElement("div");
-      d.textContent = m;
-      d.className = "system-message" + (/error|failed|invalid|expired|offline|not sent/i.test(String(m)) ? " error" : "");
-      $("log").appendChild(d);
-      $("log").scrollTop = $("log").scrollHeight;
+    function dateLabel(value){
+      const d = value ? new Date(value) : new Date();
+      if(Number.isNaN(d.getTime())) return "";
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate()-1);
+
+      const sameDay = (a,b) =>
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate();
+
+      if(sameDay(d,today)) return "Today";
+      if(sameDay(d,yesterday)) return "Yesterday";
+      return d.toLocaleDateString([], { month:"short", day:"numeric", year:d.getFullYear() !== today.getFullYear() ? "numeric" : undefined });
+    }
+
+    function appendDateSeparator(value){
+      const key = dateKey(value);
+      if(!key || key === lastRenderedDateKey) return;
+      lastRenderedDateKey = key;
+
+      const sep = document.createElement("div");
+      sep.className = "date-separator";
+      sep.textContent = dateLabel(value);
+      $("log").appendChild(sep);
     }
 
     function renderChatMessage(message){
       removeEmptyState();
 
-      const fromValue = message.from && typeof message.from === "object" ? (message.from._id || message.from.id) : message.from;
-      const senderName = message.senderName || (message.from && typeof message.from === "object" ? message.from.name : null) || userCache.get(String(fromValue)) || "User";
+      const fromValue = message.from && typeof message.from === "object"
+        ? (message.from._id || message.from.id)
+        : message.from;
+
+      const senderName =
+        message.senderName ||
+        (message.from && typeof message.from === "object" ? message.from.name : null) ||
+        userCache.get(String(fromValue)) ||
+        "User";
+
       const mine = Boolean(currentUser && fromValue && String(currentUser.id) === String(fromValue));
+
+      appendDateSeparator(message.createdAt);
 
       const row = document.createElement("div");
       row.className = "message-row " + (mine ? "mine" : "theirs");
@@ -571,17 +758,26 @@
     }
 
     function setActiveRoom(room){
-      const clean = room || "general";
-      $("room").value = clean;
-      $("roomTitle").textContent = "# " + clean;
-      document.querySelectorAll(".room-chip").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.room === clean);
-      });
+      const clean = (room || "general").trim() || "general";
+      if($("room")) $("room").value = clean;
+      if($("roomTitle")) $("roomTitle").textContent = "# " + clean;
+      localStorage.setItem("adda_room", clean);
+
+      const chips = document.querySelectorAll ? document.querySelectorAll(".room-chip") : [];
+      chips.forEach(btn => btn.classList.toggle("active", btn.dataset.room === clean));
     }
 
-    const strongPw = (pw) => pw.length >= 8 && /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /d/.test(pw) && /[^A-Za-z0-9]/.test(pw);
-    $("rPass").addEventListener("input", () => {
-      $("pwHelp").style.color = strongPw($("rPass").value) ? "#19995a" : "#74788a";
+    const strongPw = (pw) =>
+      pw.length >= 8 &&
+      /[a-z]/.test(pw) &&
+      /[A-Z]/.test(pw) &&
+      /\d/.test(pw) &&
+      /[^A-Za-z0-9]/.test(pw);
+
+    $("rPass")?.addEventListener?.("input", () => {
+      if($("pwHelp")?.style){
+        $("pwHelp").style.color = strongPw($("rPass").value) ? "#19995a" : "#74788a";
+      }
     });
 
     function decodeJwt(t){
@@ -612,10 +808,12 @@
       closeSocket();
       joinedRooms.clear();
       token = t;
-      localStorage.setItem("adda_token", t);
-      $("token").textContent = t.slice(0,24) + "...";
+      localStorage.setItem("adda_token",t);
+      if($("token")) $("token").textContent = t.slice(0,24) + "...";
+
       const payload = decodeJwt(t);
       currentUser = user || (payload ? { id:payload.id, email:payload.email } : null);
+      if(user) setProfile(user);
       updateAuthUi();
     }
 
@@ -623,20 +821,42 @@
       localStorage.removeItem("adda_token");
       token = null;
       currentUser = null;
+      pendingHistoryRoom = null;
       closeSocket();
       joinedRooms.clear();
       userCache.clear();
-      $("token").textContent = "(none)";
-      $("onlineList").innerHTML = "";
-      $("onlineCount").textContent = "0";
-      setConnectionStatus("Not connected", false);
+
+      if($("token")) $("token").textContent = "(none)";
+      if($("onlineList")) $("onlineList").innerHTML = "";
+      if($("onlineCount")) $("onlineCount").textContent = "0";
+
+      setConnectionStatus("Not connected. Please log in.", false);
       updateAuthUi();
-      log(msg);
+      $("profileChip")?.classList?.remove?.("show");
+      log(msg, false);
+    }
+
+    async function hydrateProfile(){
+      if(!token || !currentUser?.id) return;
+      try{
+        const res = await fetch("/api/users/lookup", {
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json",
+            Authorization:"Bearer " + token
+          },
+          body:JSON.stringify({ ids:[String(currentUser.id)] })
+        });
+        if(!res.ok) return;
+        const users = await res.json();
+        if(users[0]) setProfile({ id:users[0]._id || users[0].id, name:users[0].name, email:currentUser.email });
+      }catch{}
     }
 
     $("btnRegister").onclick = async () => {
       try{
         if(!strongPw($("rPass").value)) return log("Register error: Weak password (see rules).");
+
         const res = await fetch("/api/auth/register", {
           method:"POST",
           headers:{ "Content-Type":"application/json" },
@@ -646,9 +866,11 @@
             password:$("rPass").value
           })
         });
+
         const data = await res.json();
         if(!res.ok) return log("Register error: " + JSON.stringify(data));
-        saveToken(data.token, data.user);
+
+        saveToken(data.token,data.user);
         connect();
       }catch(e){
         log("Register error: " + e.message);
@@ -660,11 +882,16 @@
         const res = await fetch("/api/auth/login", {
           method:"POST",
           headers:{ "Content-Type":"application/json" },
-          body:JSON.stringify({ email:$("lEmail").value, password:$("lPass").value })
+          body:JSON.stringify({
+            email:$("lEmail").value,
+            password:$("lPass").value
+          })
         });
+
         const data = await res.json();
         if(!res.ok) return log("Login error: " + JSON.stringify(data));
-        saveToken(data.token, data.user);
+
+        saveToken(data.token,data.user);
         connect();
       }catch(e){
         log("Login error: " + e.message);
@@ -677,11 +904,13 @@
 
     function renderPresence(listIds){
       const ul = $("onlineList");
+      if(!ul) return;
       ul.innerHTML = "";
+
       const uniqueIds = Array.from(new Set(Array.isArray(listIds) ? listIds.map(String) : []));
-      $("onlineCount").textContent = String(uniqueIds.length);
 
       if(uniqueIds.length === 0){
+        if($("onlineCount")) $("onlineCount").textContent = "0";
         const li = document.createElement("li");
         li.className = "system-message";
         li.textContent = "Nobody online";
@@ -691,15 +920,34 @@
 
       fetch("/api/users/lookup", {
         method:"POST",
-        headers:{ "Content-Type":"application/json", Authorization:"Bearer " + token },
+        headers:{
+          "Content-Type":"application/json",
+          Authorization:"Bearer " + token
+        },
         body:JSON.stringify({ ids:uniqueIds })
       })
         .then(r => r.json())
         .then(users => {
-          users.sort((a,b) => a.name.localeCompare(b.name));
+          users.sort((a,b) => String(a.name).localeCompare(String(b.name)));
+
+          const byName = new Map();
           users.forEach(u => {
-            userCache.set(String(u._id || u.id), u.name);
-            if(currentUser && String(currentUser.id) === String(u._id || u.id)) currentUser.name = u.name;
+            const id = String(u._id || u.id);
+            const key = String(u.name || id).trim().toLowerCase();
+            userCache.set(id,u.name || "User");
+            if(!byName.has(key)) byName.set(key,u);
+
+            if(currentUser && String(currentUser.id) === id){
+              setProfile({ id, name:u.name, email:currentUser.email });
+            }
+          });
+
+          const uniqueUsers = Array.from(byName.values());
+          if($("onlineCount")) $("onlineCount").textContent = String(uniqueUsers.length);
+
+          uniqueUsers.forEach(u => {
+            const id = String(u._id || u.id);
+            const isMe = currentUser && String(currentUser.id) === id;
 
             const li = document.createElement("li");
             li.className = "online-user";
@@ -708,22 +956,25 @@
             avatar.className = "presence-avatar";
             avatar.textContent = initials(u.name);
 
-            const text = document.createElement("div");
+            const copy = document.createElement("div");
+
             const name = document.createElement("div");
             name.className = "presence-name";
-            name.textContent = u.name;
+            name.textContent = isMe ? u.name + " (You)" : u.name;
+
             const state = document.createElement("div");
             state.className = "presence-state";
             state.textContent = "Online";
 
-            text.appendChild(name);
-            text.appendChild(state);
+            copy.appendChild(name);
+            copy.appendChild(state);
             li.appendChild(avatar);
-            li.appendChild(text);
+            li.appendChild(copy);
             ul.appendChild(li);
           });
         })
         .catch(() => {
+          if($("onlineCount")) $("onlineCount").textContent = String(uniqueIds.length);
           ul.innerHTML = "";
           const li = document.createElement("li");
           li.className = "system-message error";
@@ -735,24 +986,70 @@
     async function resolveSenderName(userId){
       if(!userId) return "User";
       const key = String(userId);
+
       if(userCache.has(key)) return userCache.get(key);
       if(currentUser && String(currentUser.id) === key && currentUser.name) return currentUser.name;
 
       try{
         const res = await fetch("/api/users/lookup", {
           method:"POST",
-          headers:{ "Content-Type":"application/json", Authorization:"Bearer " + token },
+          headers:{
+            "Content-Type":"application/json",
+            Authorization:"Bearer " + token
+          },
           body:JSON.stringify({ ids:[key] })
         });
+
         if(!res.ok) return "User";
         const users = await res.json();
         const user = users[0];
+
         if(user){
-          userCache.set(key, user.name);
+          userCache.set(key,user.name);
+          if(currentUser && String(currentUser.id) === key) setProfile({ id:key, name:user.name, email:currentUser.email });
           return user.name;
         }
       }catch{}
+
       return "User";
+    }
+
+    async function loadHistoryForRoom(room){
+      if(!token) return log("Login first. Token is empty.");
+      if(isExpired(token)) return hardLogout("Session expired. Please login again.");
+
+      const clean = (room || "general").trim() || "general";
+      setActiveRoom(clean);
+      showNotice("Loading #" + clean + "…","info",1200);
+
+      try{
+        const res = await fetch("/api/messages/" + encodeURIComponent(clean), {
+          headers:{ Authorization:"Bearer " + token }
+        });
+
+        const data = await res.json();
+
+        if(res.status === 401) return hardLogout("Auth failed (401). Please login again.");
+        if(!res.ok) return log("Load error: " + JSON.stringify(data));
+
+        $("log").innerHTML = "";
+        lastRenderedDateKey = null;
+
+        if(data.length === 0){
+          showRoomWelcome(clean,"No saved messages yet. Start the conversation.");
+          return;
+        }
+
+        data.forEach(m => {
+          const userId = m.from && typeof m.from === "object" ? (m.from._id || m.from.id) : m.from;
+          const senderName = m.from && typeof m.from === "object" ? m.from.name : userCache.get(String(userId));
+
+          if(senderName && userId) userCache.set(String(userId),senderName);
+          renderChatMessage({ ...m, from:userId, senderName });
+        });
+      }catch(e){
+        log("Load error: " + e.message);
+      }
     }
 
     function connect(){
@@ -760,145 +1057,161 @@
       if(isExpired(token)) return hardLogout("Session expired. Please login again.");
 
       closeSocket();
-      setConnectionStatus("Connecting…", false);
+      setConnectionStatus("Connecting…",false);
 
       socket = io("/", { auth:{ token } });
 
       socket.on("connect", () => {
         readyRooms.clear();
-        setConnectionStatus("Live", true);
-        log("Socket connected.");
-        for(const room of joinedRooms) socket.emit("room:join", room);
+        setConnectionStatus("Connected.",true);
+        log("Socket connected.",false);
+
+        for(const room of joinedRooms){
+          socket.emit("room:join",room);
+        }
       });
 
       socket.on("room:joined", (room) => {
         joinedRooms.add(room);
         readyRooms.add(room);
         setActiveRoom(room);
-        log("Joined #" + room);
+        log("Joined room: " + room,false);
+
+        if(pendingHistoryRoom === room){
+          pendingHistoryRoom = null;
+          loadHistoryForRoom(room);
+        }
       });
 
-      socket.on("room:error", (data) => log("Room error: " + (data && data.error ? data.error : "Unable to join room.")));
+      socket.on("room:error", data => {
+        pendingHistoryRoom = null;
+        log("Room error: " + (data && data.error ? data.error : "Unable to join room."));
+      });
 
       socket.on("disconnect", () => {
         readyRooms.clear();
-        setConnectionStatus("Reconnecting…", false);
-        log("Disconnected. Your draft is kept.");
+        setConnectionStatus("Disconnected. Waiting for connection.",false);
+        log("Disconnected. Your draft is kept.",false);
       });
 
-      socket.on("presence:init", (ids) => {
-        onlineSet = new Set(ids);
+      socket.on("presence:init", ids => {
+        onlineSet = new Set((ids || []).map(String));
         renderPresence(Array.from(onlineSet));
       });
 
       socket.on("presence:update", ({ userId, isOnline }) => {
-        if(isOnline) onlineSet.add(userId);
-        else onlineSet.delete(userId);
+        const key = String(userId);
+        if(isOnline) onlineSet.add(key);
+        else onlineSet.delete(key);
         renderPresence(Array.from(onlineSet));
       });
 
-      socket.on("message:new", async (m) => {
+      socket.on("message:new", async m => {
         const senderName = await resolveSenderName(m.from);
         renderChatMessage({ ...m, senderName });
       });
 
-      socket.on("message:error", (data) => log("Message error: " + (data && data.error ? data.error : "Message could not be sent.")));
+      socket.on("message:error", data => {
+        log("Message error: " + (data && data.error ? data.error : "Message could not be sent."));
+      });
 
-      socket.on("connect_error", (e) => {
+      socket.on("connect_error", e => {
         readyRooms.clear();
-        setConnectionStatus("Connection failed", false);
+        setConnectionStatus("Connection failed. Please try again.",false);
         log("Socket error: " + e.message);
-        if(String(e.message).toLowerCase().includes("invalid token")) hardLogout("Token invalid. Please login again.");
+
+        if(String(e.message).toLowerCase().includes("invalid token")){
+          hardLogout("Token invalid. Please login again.");
+        }
       });
     }
 
     $("btnJoin").onclick = () => {
       if(!token) return log("Login first. Token is empty.");
       if(isExpired(token)) return hardLogout("Session expired. Please login again.");
-      if(!socket || !socket.connected) return log("Not connected. Wait for the connection before joining a room.");
-      const room = ($("room").value || "general").trim();
+      if(!socket?.connected) return log("Not connected. Wait for the connection before joining a room.");
+
+      const room = ($("room").value || "general").trim() || "general";
       setActiveRoom(room);
-      socket.emit("room:join", room);
+      socket.emit("room:join",room);
     };
 
-    $("btnLoad").onclick = async () => {
-      if(!token) return log("Login first. Token is empty.");
-      if(isExpired(token)) return hardLogout("Session expired. Please login again.");
-      const room = ($("room").value || "general").trim();
-      setActiveRoom(room);
-
-      try{
-        const res = await fetch("/api/messages/" + encodeURIComponent(room), {
-          headers:{ Authorization:"Bearer " + token }
-        });
-        const data = await res.json();
-        if(res.status === 401) return hardLogout("Auth failed (401). Please login again.");
-        if(!res.ok) return log("Load error: " + JSON.stringify(data));
-
-        $("log").innerHTML = "";
-        if(data.length === 0){
-          log("No saved messages in #" + room + " yet.");
-          return;
-        }
-
-        data.forEach(m => {
-          const userId = m.from && typeof m.from === "object" ? (m.from._id || m.from.id) : m.from;
-          const senderName = m.from && typeof m.from === "object" ? m.from.name : userCache.get(String(userId));
-          if(senderName && userId) userCache.set(String(userId), senderName);
-          renderChatMessage({ ...m, from:userId, senderName });
-        });
-      }catch(e){
-        log("Load error: " + e.message);
-      }
-    };
-
+    $("btnLoad").onclick = () => loadHistoryForRoom(($("room").value || "general").trim());
     $("btnLoadTop").onclick = () => $("btnLoad").click();
 
     $("btnSend").onclick = () => {
       if(!token) return log("Login first. Token is empty.");
       if(isExpired(token)) return hardLogout("Session expired. Please login again.");
-      if(!socket || !socket.connected) return log("Message not sent: you are offline. Your draft is kept.");
+      if(!socket?.connected) return log("Message not sent: you are offline. Your draft is kept.");
 
-      const room = ($("room").value || "general").trim();
-      if(!readyRooms.has(room)) return log("Message not sent: join this room and wait for confirmation. Your draft is kept.");
+      const room = ($("room").value || "general").trim() || "general";
+
+      if(!readyRooms.has(room)){
+        return log("Message not sent: join this room and wait for confirmation. Your draft is kept.");
+      }
 
       const body = $("msg").value.trim();
       if(!body) return;
-      socket.emit("message:send", { room, body });
+
+      socket.emit("message:send",{ room, body });
       $("msg").value = "";
     };
 
-    $("msg").addEventListener("keydown", (e) => {
+    $("msg")?.addEventListener?.("keydown", e => {
       if(e.key === "Enter" && !e.shiftKey){
         e.preventDefault();
         $("btnSend").click();
       }
     });
 
-    document.querySelectorAll(".room-chip").forEach(btn => {
+    const roomChips = document.querySelectorAll ? document.querySelectorAll(".room-chip") : [];
+    roomChips.forEach(btn => {
       btn.addEventListener("click", () => {
-        setActiveRoom(btn.dataset.room);
-        if(token && socket && socket.connected){
-          socket.emit("room:join", btn.dataset.room);
-          setTimeout(() => $("btnLoad").click(), 120);
+        const room = btn.dataset.room;
+        setActiveRoom(room);
+        showRoomWelcome(room,"Loading recent messages…");
+
+        if(!token){
+          showNotice("Log in to enter #" + room + ".","error");
+          return;
         }
+
+        if(!socket?.connected){
+          showNotice("Waiting for the connection before opening #" + room + ".","error");
+          return;
+        }
+
+        if(readyRooms.has(room)){
+          loadHistoryForRoom(room);
+          return;
+        }
+
+        pendingHistoryRoom = room;
+        socket.emit("room:join",room);
       });
     });
 
-    $("room").addEventListener("input", () => setActiveRoom(($("room").value || "general").trim()));
+    $("room")?.addEventListener?.("input", () => {
+      setActiveRoom(($("room").value || "general").trim());
+    });
 
     window.addEventListener("DOMContentLoaded", () => {
       updateAuthUi();
-      setActiveRoom("general");
+
+      const savedRoom = localStorage.getItem("adda_room") || "general";
+      setActiveRoom(savedRoom);
+      showRoomWelcome(savedRoom,"Join the room or load recent messages to start chatting.");
 
       const saved = localStorage.getItem("adda_token");
+
       if(saved){
         if(isExpired(saved)){
           hardLogout("Saved session expired. Please login again.");
         }else{
           saveToken(saved);
+          hydrateProfile();
           connect();
-          log("Restored session from saved token.");
+          log("Restored session from saved token.",false);
         }
       }
     });
