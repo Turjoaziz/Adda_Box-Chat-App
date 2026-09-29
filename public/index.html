@@ -570,6 +570,175 @@
     body.dark-mode .presence-name{color:#e4e5ec}
     body.dark-mode .presence-state{color:#868b9b}
 
+
+    /* Three-step app flow: authentication -> groups -> chat */
+    .flow-screen{display:none}
+    .flow-screen.active{display:block}
+
+    #authPanel.flow-screen{
+      min-height:calc(100vh - 116px);
+      padding:36px 24px;
+      border-bottom:0;
+      background:transparent;
+    }
+    #authPanel.flow-screen.active{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .auth-stage{
+      width:min(880px,100%);
+      padding:30px;
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:rgba(255,255,255,.78);
+      box-shadow:0 24px 60px rgba(69,46,105,.10);
+      backdrop-filter:blur(18px);
+    }
+    .auth-stage-head{text-align:center;margin-bottom:22px}
+    .auth-stage-logo{
+      width:58px;height:58px;margin:0 auto 12px;
+      display:grid;place-items:center;
+      border-radius:18px;
+      background:linear-gradient(135deg,#8d42f7,#6e20e6);
+      color:#fff;font-size:22px;font-weight:900;
+      box-shadow:0 12px 26px rgba(124,45,244,.24);
+    }
+    .auth-stage-title{font-size:24px;font-weight:900;letter-spacing:-.03em}
+    .auth-stage-sub{margin-top:5px;color:var(--muted);font-size:12px}
+
+    .groups-screen{
+      min-height:calc(100vh - 116px);
+      padding:34px;
+    }
+    .groups-inner{width:min(1050px,100%);margin:0 auto}
+    .groups-hero{
+      display:flex;align-items:end;justify-content:space-between;gap:18px;
+      margin-bottom:24px;
+    }
+    .groups-kicker{
+      margin-bottom:6px;
+      color:var(--purple);font-size:10px;font-weight:900;
+      text-transform:uppercase;letter-spacing:.11em;
+    }
+    .groups-title{font-size:28px;font-weight:900;letter-spacing:-.035em}
+    .groups-sub{max-width:590px;margin-top:6px;color:var(--muted);font-size:12px;line-height:1.6}
+    .groups-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+    }
+    .group-card{
+      position:relative;
+      min-height:155px;
+      padding:20px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:#fff;
+      color:var(--ink);
+      text-align:left;
+      overflow:hidden;
+      box-shadow:0 12px 30px rgba(54,41,76,.05);
+    }
+    .group-card::after{
+      content:"";
+      position:absolute;right:-28px;bottom:-32px;
+      width:120px;height:120px;border-radius:50%;
+      background:radial-gradient(circle,rgba(124,45,244,.12),transparent 70%);
+    }
+    .group-card:hover{
+      transform:translateY(-2px);
+      border-color:#d8c5ff;
+      box-shadow:0 18px 38px rgba(85,52,128,.10);
+    }
+    .group-icon{
+      width:42px;height:42px;
+      display:grid;place-items:center;
+      border-radius:13px;
+      background:#f0e9ff;color:#7325df;
+      font-size:16px;font-weight:900;
+    }
+    .group-card-title{margin-top:17px;font-size:16px;font-weight:900}
+    .group-card-copy{margin-top:5px;color:var(--muted);font-size:11px;line-height:1.5}
+    .group-card-cta{margin-top:15px;color:var(--purple);font-size:10px;font-weight:900}
+    .custom-group{
+      margin-top:16px;
+      display:flex;align-items:center;gap:10px;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:17px;
+      background:#fff;
+    }
+    .custom-group input{
+      flex:1;min-width:0;
+      padding:11px 12px;
+      border:1px solid var(--line);border-radius:11px;
+      background:#fafafd;color:var(--ink);outline:none;
+      font-size:12px;
+    }
+    .custom-group input:focus{
+      border-color:#b991ff;
+      box-shadow:0 0 0 3px rgba(124,45,244,.10);
+    }
+    .custom-group button{
+      padding:11px 15px;border-radius:11px;
+      background:linear-gradient(135deg,#8b3df7,#7325e9);
+      color:#fff;font-size:11px;font-weight:900;
+      box-shadow:0 7px 18px rgba(124,45,244,.18);
+    }
+
+    #workspace.flow-screen.active{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 260px;
+    }
+    #workspace .sidebar-left{display:none}
+
+    .chat-head-left{display:flex;align-items:center;gap:11px;min-width:0}
+    .back-groups-btn{
+      width:36px;height:36px;flex:0 0 auto;
+      display:grid;place-items:center;
+      border:1px solid var(--line);border-radius:11px;
+      background:#f7f7fb;color:#565c69;
+      font-size:16px;font-weight:900;
+    }
+    .back-groups-btn:hover{background:#f0edf7;color:var(--purple)}
+
+    body.dark-mode .auth-stage,
+    body.dark-mode .group-card,
+    body.dark-mode .custom-group{
+      background:rgba(23,24,34,.92);
+      border-color:#2a2c39;
+    }
+    body.dark-mode .auth-stage{box-shadow:0 24px 60px rgba(0,0,0,.24)}
+    body.dark-mode .auth-stage-title,
+    body.dark-mode .groups-title,
+    body.dark-mode .group-card-title{color:#f2f2f7}
+    body.dark-mode .group-card:hover{
+      border-color:#4d3a73;
+      box-shadow:0 18px 38px rgba(0,0,0,.22);
+    }
+    body.dark-mode .group-icon{background:#2b2042;color:#c6a3ff}
+    body.dark-mode .custom-group input{
+      background:#11121a;border-color:#303240;color:#ececf3;
+    }
+    body.dark-mode .back-groups-btn{
+      background:#191a25;border-color:#2b2d3b;color:#c9cbd5;
+    }
+    body.dark-mode .back-groups-btn:hover{background:#222331;color:#c9a7ff}
+
+    @media (max-width:760px){
+      #authPanel.flow-screen{min-height:calc(100vh - 84px);padding:18px 12px}
+      .auth-stage{padding:20px 14px;border-radius:20px}
+      .auth-stage-title{font-size:21px}
+      .groups-screen{min-height:calc(100vh - 84px);padding:22px 14px}
+      .groups-hero{align-items:flex-start;flex-direction:column}
+      .groups-title{font-size:24px}
+      .groups-grid{grid-template-columns:1fr}
+      .custom-group{align-items:stretch;flex-direction:column}
+      #workspace.flow-screen.active{display:flex;flex-direction:column}
+      #workspace .sidebar-right{display:none}
+    }
+
     @media (max-width:1100px){
       .workspace{grid-template-columns:210px minmax(0,1fr)}
       .sidebar-right{display:none}
@@ -637,7 +806,13 @@
         </div>
       </header>
 
-      <section id="authPanel" class="auth-panel">
+      <section id="authPanel" class="auth-panel flow-screen active">
+        <div class="auth-stage">
+          <div class="auth-stage-head">
+            <div class="auth-stage-logo">A</div>
+            <div class="auth-stage-title">Welcome to Adda Box</div>
+            <div class="auth-stage-sub">Login or create an account to continue.</div>
+          </div>
         <div>
           <div class="auth-title">Welcome to Adda Box</div>
           <div class="auth-hint">Sign in or create an account to enter the conversation.</div>
@@ -666,7 +841,54 @@
         </div>
       </section>
 
-      <div class="workspace">
+      <section id="groupsScreen" class="groups-screen flow-screen">
+        <div class="groups-inner">
+          <div class="groups-hero">
+            <div>
+              <div class="groups-kicker">Step 2 · Choose a group</div>
+              <div class="groups-title">Where do you want to chat?</div>
+              <div class="groups-sub">Pick a group below. Adda Box will join the room and open the latest conversation automatically.</div>
+            </div>
+          </div>
+
+          <div class="groups-grid">
+            <button class="group-card" data-group-room="general">
+              <div class="group-icon">#</div>
+              <div class="group-card-title">General</div>
+              <div class="group-card-copy">Open conversation for everyone. Good for everyday chat and quick catch-ups.</div>
+              <div class="group-card-cta">Open group →</div>
+            </button>
+
+            <button class="group-card" data-group-room="gaming">
+              <div class="group-icon">G</div>
+              <div class="group-card-title">Gaming</div>
+              <div class="group-card-copy">Talk about FC, racing, action games, new releases and gaming sessions.</div>
+              <div class="group-card-cta">Open group →</div>
+            </button>
+
+            <button class="group-card" data-group-room="coursework">
+              <div class="group-icon">C</div>
+              <div class="group-card-title">Coursework</div>
+              <div class="group-card-copy">A focused place for university work, study discussions and project updates.</div>
+              <div class="group-card-cta">Open group →</div>
+            </button>
+
+            <button class="group-card" data-group-room="random">
+              <div class="group-icon">R</div>
+              <div class="group-card-title">Random</div>
+              <div class="group-card-copy">Anything that does not fit elsewhere. Casual conversation, links and spontaneous chat.</div>
+              <div class="group-card-cta">Open group →</div>
+            </button>
+          </div>
+
+          <div class="custom-group">
+            <input id="groupRoomInput" placeholder="Enter another room name" maxlength="50" />
+            <button id="btnOpenCustomRoom" type="button">Join custom room</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="workspace" class="workspace flow-screen">
         <aside class="sidebar sidebar-left">
           <div class="section-label">Rooms</div>
           <div class="room-list">
@@ -688,9 +910,12 @@
 
         <section class="chat">
           <div class="chat-head">
-            <div>
-              <div id="roomTitle" class="chat-room"># general</div>
-              <div class="chat-room-sub">MongoDB history • real-time Socket.IO messages</div>
+            <div class="chat-head-left">
+              <button id="btnBackGroups" class="back-groups-btn" type="button" aria-label="Back to groups" title="Back to groups">←</button>
+              <div>
+                <div id="roomTitle" class="chat-room"># general</div>
+                <div class="chat-room-sub">MongoDB history • real-time Socket.IO messages</div>
+              </div>
             </div>
             <button id="btnLoadTop" class="history-btn">Load last 50</button>
           </div>
@@ -772,6 +997,46 @@
     }
 
     applyTheme(preferredTheme());
+
+    function setFlowScreen(name){
+      const auth = $("authPanel");
+      const groups = $("groupsScreen");
+      const workspace = $("workspace");
+
+      auth?.classList?.toggle("active",name === "auth");
+      groups?.classList?.toggle("active",name === "groups");
+      workspace?.classList?.toggle("active",name === "chat");
+    }
+
+    function showAuthScreen(){ setFlowScreen("auth"); }
+    function showGroupsScreen(){ setFlowScreen("groups"); }
+    function showChatScreen(){ setFlowScreen("chat"); }
+
+    function openRoomFromGroups(room){
+      const clean = (room || "general").trim() || "general";
+      setActiveRoom(clean);
+      showChatScreen();
+      showRoomWelcome(clean,"Loading recent messages…");
+
+      if(!token){
+        showAuthScreen();
+        return log("Login first. Token is empty.");
+      }
+
+      if(!socket?.connected){
+        pendingHistoryRoom = clean;
+        showNotice("Connecting to #" + clean + "…","info",1600);
+        return;
+      }
+
+      if(readyRooms.has(clean)){
+        loadHistoryForRoom(clean);
+        return;
+      }
+
+      pendingHistoryRoom = clean;
+      socket.emit("room:join",clean);
+    }
 
 
     function initials(name){
@@ -1032,6 +1297,7 @@
       updateAuthUi();
       $("profileChip")?.classList?.remove?.("show");
       log(msg, false);
+      showAuthScreen();
     }
 
     async function hydrateProfile(){
@@ -1069,6 +1335,7 @@
         if(!res.ok) return log("Register error: " + JSON.stringify(data));
 
         saveToken(data.token,data.user);
+        showGroupsScreen();
         connect();
       }catch(e){
         log("Register error: " + e.message);
@@ -1090,6 +1357,7 @@
         if(!res.ok) return log("Login error: " + JSON.stringify(data));
 
         saveToken(data.token,data.user);
+        showGroupsScreen();
         connect();
       }catch(e){
         log("Login error: " + e.message);
@@ -1268,6 +1536,10 @@
         for(const room of joinedRooms){
           socket.emit("room:join",room);
         }
+
+        if(pendingHistoryRoom && !readyRooms.has(pendingHistoryRoom)){
+          socket.emit("room:join",pendingHistoryRoom);
+        }
       });
 
       socket.on("room:joined", (room) => {
@@ -1390,12 +1662,33 @@
       });
     });
 
+    const groupCards = document.querySelectorAll ? document.querySelectorAll("[data-group-room]") : [];
+    groupCards.forEach(card => {
+      card.addEventListener("click", () => openRoomFromGroups(card.dataset.groupRoom));
+    });
+
+    $("btnOpenCustomRoom")?.addEventListener?.("click", () => {
+      openRoomFromGroups(($("groupRoomInput")?.value || "").trim());
+    });
+
+    $("groupRoomInput")?.addEventListener?.("keydown", e => {
+      if(e.key === "Enter"){
+        e.preventDefault();
+        $("btnOpenCustomRoom")?.click?.();
+      }
+    });
+
+    $("btnBackGroups")?.addEventListener?.("click", () => {
+      showGroupsScreen();
+    });
+
     $("room")?.addEventListener?.("input", () => {
       setActiveRoom(($("room").value || "general").trim());
     });
 
     window.addEventListener("DOMContentLoaded", () => {
       updateAuthUi();
+      showAuthScreen();
 
       const savedRoom = localStorage.getItem("adda_room") || "general";
       setActiveRoom(savedRoom);
@@ -1408,6 +1701,7 @@
           hardLogout("Saved session expired. Please login again.");
         }else{
           saveToken(saved);
+          showGroupsScreen();
           hydrateProfile();
           connect();
           log("Restored session from saved token.",false);
