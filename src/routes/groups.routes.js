@@ -2,12 +2,16 @@ import { Router } from "express";
 import bcrypt from "bcrypt";
 import { requireAuth } from "../middleware/auth.js";
 import Group from "../models/Group.js";
+import GroupMember from "../models/GroupMember.js";
+import DeviceKey from "../models/DeviceKey.js";
 import {
   cleanGroupName,
   groupNameKey,
   groupSlug,
   ensureDefaultGroups,
-  findSimilarGroup
+  findSimilarGroup,
+  findGroupBySlug,
+  verifyGroupAccess
 } from "../services/groups.js";
 
 const router = Router();
@@ -31,6 +35,66 @@ router.get("/", requireAuth, async (req, res) => {
     .lean();
 
   res.json(groups.map(publicGroupShape));
+});
+
+router.get("/:slug/recipients", requireAuth, async (req, res) => {
+  const group = await findGroupBySlug(req.params.slug, true);
+
+  if (!group) {
+    return res.status(404).json({ error: "Group does not exist." });
+  }
+
+  const password = req.headers["x-group-password"];
+  const allowed = await verifyGroupAccess(group, password);
+
+  if (!allowed) {
+    return res.status(403).json({
+      error: "Private group password required or incorrect.",
+      code: "PRIVATE_GROUP_PASSWORD"
+    });
+  }
+
+  await GroupMember.updateOne(
+    { group: group._id, user: req.user.id },
+    { $setOnInsert: { joinedAt: new Date() } },
+    { upsert: true }
+  );
+
+  const memberships = await GroupMember.find({ group: group._id }, "user").lean();
+  const memberIds = memberships.map(member => member.user);
+
+  const deviceKeys = await DeviceKey.find({
+    user: { $in: memberIds },
+    revokedAt: null,
+    encryptionPublicJwk: { $ne: null },
+    encryptionKeySignature: { $ne: null }
+  })
+    .select(
+      "user deviceId signingPublicJwk fingerprint encryptionPublicJwk encryptionFingerprint encryptionKeySignature"
+    )
+    .lean();
+
+  const readyUsers = new Set(deviceKeys.map(key => String(key.user)));
+
+  return res.json({
+    group: {
+      id: String(group._id),
+      slug: group.slug,
+      name: group.name,
+      visibility: group.visibility
+    },
+    memberCount: memberships.length,
+    encryptionReadyUserCount: readyUsers.size,
+    recipients: deviceKeys.map(key => ({
+      userId: String(key.user),
+      deviceId: key.deviceId,
+      signingPublicJwk: key.signingPublicJwk,
+      signingFingerprint: key.fingerprint,
+      encryptionPublicJwk: key.encryptionPublicJwk,
+      encryptionFingerprint: key.encryptionFingerprint,
+      encryptionKeySignature: key.encryptionKeySignature
+    }))
+  });
 });
 
 router.post("/", requireAuth, async (req, res) => {
@@ -72,6 +136,12 @@ router.post("/", requireAuth, async (req, res) => {
       owner: req.user.id,
       isBuiltIn: false
     });
+
+    await GroupMember.updateOne(
+      { group: group._id, user: req.user.id },
+      { $setOnInsert: { joinedAt: new Date() } },
+      { upsert: true }
+    );
 
     return res.status(201).json(publicGroupShape(group));
   } catch (err) {
