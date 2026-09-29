@@ -119,12 +119,6 @@ router.get("/:userId/:deviceId", requireAuth, async (req, res) => {
 
   if (!key) return res.status(404).json({ error: "Device key not found." });
 
-  if (!key.encryptionPublicJwk || !key.encryptionKeySignature) {
-    return res.status(409).json({
-      error: "This device has not registered an encryption key yet."
-    });
-  }
-
   return res.json(publicKeyBundle(key));
 });
 
