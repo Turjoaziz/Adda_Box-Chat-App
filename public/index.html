@@ -739,6 +739,122 @@
       #workspace .sidebar-right{display:none}
     }
 
+
+    .groups-section{margin-top:24px}
+    .groups-section:first-of-type{margin-top:0}
+    .groups-section-head{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      margin-bottom:11px;
+    }
+    .groups-section-title{font-size:13px;font-weight:900}
+    .groups-section-copy{margin-top:2px;color:var(--muted);font-size:10px}
+    .group-badge{
+      position:absolute;top:17px;right:17px;
+      padding:5px 8px;border-radius:999px;
+      background:#f1ecff;color:#6d28d9;
+      font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;
+    }
+    .group-badge.private{background:#fff0f3;color:#bb4054}
+    .groups-empty{
+      grid-column:1/-1;
+      padding:22px;border:1px dashed var(--line);border-radius:16px;
+      text-align:center;color:var(--muted);font-size:11px;
+      background:rgba(255,255,255,.46);
+    }
+    .create-group-panel{
+      margin-top:26px;padding:18px;
+      border:1px solid var(--line);border-radius:19px;
+      background:rgba(255,255,255,.72);
+    }
+    .create-group-title{font-size:13px;font-weight:900}
+    .create-group-sub{margin-top:3px;color:var(--muted);font-size:10px}
+    .create-group-form{
+      display:grid;
+      grid-template-columns:minmax(0,1.5fr) 150px minmax(0,1fr) auto;
+      gap:9px;margin-top:13px;
+    }
+    .create-group-form input,.create-group-form select{
+      min-width:0;
+      padding:11px 12px;border:1px solid var(--line);border-radius:11px;
+      background:#fafafd;color:var(--ink);outline:none;font-size:11px;
+    }
+    .create-group-form input:focus,.create-group-form select:focus{
+      border-color:#b991ff;box-shadow:0 0 0 3px rgba(124,45,244,.10);
+    }
+    .create-group-form button{
+      padding:11px 15px;border-radius:11px;
+      background:linear-gradient(135deg,#8b3df7,#7325e9);
+      color:#fff;font-size:11px;font-weight:900;
+      box-shadow:0 7px 18px rgba(124,45,244,.18);
+      white-space:nowrap;
+    }
+    .create-group-error{
+      min-height:16px;margin-top:8px;
+      color:#bd4054;font-size:10px;font-weight:700;
+    }
+    .group-rule{
+      margin-top:8px;color:var(--muted);font-size:9px;line-height:1.5;
+    }
+
+    .group-modal{
+      display:none;position:fixed;inset:0;z-index:50;
+      align-items:center;justify-content:center;
+      padding:20px;background:rgba(14,10,24,.46);
+      backdrop-filter:blur(7px);
+    }
+    .group-modal.show{display:flex}
+    .group-modal-card{
+      width:min(420px,100%);
+      padding:22px;border:1px solid var(--line);border-radius:20px;
+      background:#fff;box-shadow:0 30px 80px rgba(20,12,34,.28);
+    }
+    .group-modal-icon{
+      width:45px;height:45px;display:grid;place-items:center;
+      border-radius:14px;background:#fff0f3;color:#bb4054;
+      font-size:18px;font-weight:900;
+    }
+    .group-modal-title{margin-top:14px;font-size:17px;font-weight:900}
+    .group-modal-copy{margin-top:5px;color:var(--muted);font-size:11px;line-height:1.5}
+    .group-modal-card input{
+      width:100%;margin-top:15px;padding:11px 12px;
+      border:1px solid var(--line);border-radius:11px;
+      background:#fafafd;color:var(--ink);outline:none;font-size:12px;
+    }
+    .group-modal-card input:focus{
+      border-color:#b991ff;box-shadow:0 0 0 3px rgba(124,45,244,.10);
+    }
+    .group-modal-error{min-height:16px;margin-top:7px;color:#bd4054;font-size:10px}
+    .group-modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:11px}
+    .group-modal-actions button{padding:9px 13px;border-radius:10px;font-size:10px;font-weight:900}
+    .group-modal-cancel{background:#f2f3f6;color:#5f6572}
+    .group-modal-enter{background:linear-gradient(135deg,#8b3df7,#7325e9);color:#fff}
+
+    body.dark-mode .groups-empty,
+    body.dark-mode .create-group-panel{
+      background:rgba(23,24,34,.82);border-color:#2a2c39;
+    }
+    body.dark-mode .group-badge{background:#2b2141;color:#c7a5ff}
+    body.dark-mode .group-badge.private{background:#341b23;color:#f0a5b1}
+    body.dark-mode .create-group-form input,
+    body.dark-mode .create-group-form select,
+    body.dark-mode .group-modal-card input{
+      background:#11121a;border-color:#303240;color:#ececf3;
+    }
+    body.dark-mode .group-modal-card{
+      background:#171822;border-color:#30323f;
+      box-shadow:0 30px 80px rgba(0,0,0,.48);
+    }
+    body.dark-mode .group-modal-icon{background:#341b23;color:#f0a5b1}
+    body.dark-mode .group-modal-cancel{background:#242631;color:#c6c8d2}
+
+    @media (max-width:900px){
+      .create-group-form{grid-template-columns:1fr 1fr}
+      .create-group-form button{width:100%}
+    }
+    @media (max-width:560px){
+      .create-group-form{grid-template-columns:1fr}
+    }
+
     @media (max-width:1100px){
       .workspace{grid-template-columns:210px minmax(0,1fr)}
       .sidebar-right{display:none}
@@ -844,46 +960,63 @@
             <div>
               <div class="groups-kicker">Step 2 · Choose a group</div>
               <div class="groups-title">Where do you want to chat?</div>
-              <div class="groups-sub">Pick a group below. Adda Box will join the room and open the latest conversation automatically.</div>
+              <div class="groups-sub">Public groups are open to every logged-in user. Private groups require the group password before anyone can enter or read the saved conversation.</div>
             </div>
           </div>
 
-          <div class="groups-grid">
-            <button class="group-card" data-group-room="general">
-              <div class="group-icon">#</div>
-              <div class="group-card-title">General</div>
-              <div class="group-card-copy">Open conversation for everyone. Good for everyday chat and quick catch-ups.</div>
-              <div class="group-card-cta">Open group →</div>
-            </button>
+          <section class="groups-section">
+            <div class="groups-section-head">
+              <div>
+                <div class="groups-section-title">Public Groups</div>
+                <div class="groups-section-copy">Open for everyone — no group password required.</div>
+              </div>
+            </div>
+            <div id="publicGroupsGrid" class="groups-grid"></div>
+          </section>
 
-            <button class="group-card" data-group-room="gaming">
-              <div class="group-icon">G</div>
-              <div class="group-card-title">Gaming</div>
-              <div class="group-card-copy">Talk about FC, racing, action games, new releases and gaming sessions.</div>
-              <div class="group-card-cta">Open group →</div>
-            </button>
+          <section class="groups-section">
+            <div class="groups-section-head">
+              <div>
+                <div class="groups-section-title">Private Groups</div>
+                <div class="groups-section-copy">Password protected. The password is checked on the server.</div>
+              </div>
+            </div>
+            <div id="privateGroupsGrid" class="groups-grid"></div>
+          </section>
 
-            <button class="group-card" data-group-room="coursework">
-              <div class="group-icon">C</div>
-              <div class="group-card-title">Coursework</div>
-              <div class="group-card-copy">A focused place for university work, study discussions and project updates.</div>
-              <div class="group-card-cta">Open group →</div>
-            </button>
+          <section class="create-group-panel">
+            <div class="create-group-title">Create a group</div>
+            <div class="create-group-sub">Choose whether everyone can enter or protect it with a password.</div>
 
-            <button class="group-card" data-group-room="random">
-              <div class="group-icon">R</div>
-              <div class="group-card-title">Random</div>
-              <div class="group-card-copy">Anything that does not fit elsewhere. Casual conversation, links and spontaneous chat.</div>
-              <div class="group-card-cta">Open group →</div>
-            </button>
-          </div>
+            <div class="create-group-form">
+              <input id="newGroupName" placeholder="Group name" maxlength="40" />
+              <select id="newGroupVisibility" aria-label="Group visibility">
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
+              <input id="newGroupPassword" type="password" placeholder="Private password" maxlength="72" style="display:none" />
+              <button id="btnCreateGroup" type="button">Create group</button>
+            </div>
 
-          <div class="custom-group">
-            <input id="groupRoomInput" placeholder="Enter another room name" maxlength="50" />
-            <button id="btnOpenCustomRoom" type="button">Join custom room</button>
-          </div>
+            <div id="createGroupError" class="create-group-error"></div>
+            <div class="group-rule">Names are checked server-side. Case changes, spacing/punctuation variations and very close names are rejected so confusing duplicate groups cannot be created.</div>
+          </section>
         </div>
       </section>
+
+      <div id="privateGroupModal" class="group-modal" role="dialog" aria-modal="true" aria-labelledby="privateGroupTitle">
+        <div class="group-modal-card">
+          <div class="group-modal-icon">⌕</div>
+          <div id="privateGroupTitle" class="group-modal-title">Private group</div>
+          <div class="group-modal-copy">Enter this group’s password to open the chat and message history.</div>
+          <input id="privateGroupPassword" type="password" placeholder="Group password" maxlength="72" autocomplete="off" />
+          <div id="privateGroupError" class="group-modal-error"></div>
+          <div class="group-modal-actions">
+            <button id="btnCancelPrivateGroup" class="group-modal-cancel" type="button">Cancel</button>
+            <button id="btnEnterPrivateGroup" class="group-modal-enter" type="button">Enter group</button>
+          </div>
+        </div>
+      </div>
 
       <div id="workspace" class="workspace flow-screen">
         <aside class="sidebar sidebar-left">
@@ -958,6 +1091,9 @@
     const joinedRooms = new Set();
     const readyRooms = new Set();
     const userCache = new Map();
+    const groupPasswords = new Map();
+    const groupCatalog = new Map();
+    let pendingPrivateGroup = null;
 
     const $ = (id) => document.getElementById(id);
 
@@ -1006,11 +1142,128 @@
     }
 
     function showAuthScreen(){ setFlowScreen("auth"); }
-    function showGroupsScreen(){ setFlowScreen("groups"); }
+    function showGroupsScreen(){
+      setFlowScreen("groups");
+      if(token) loadGroups();
+    }
     function showChatScreen(){ setFlowScreen("chat"); }
 
-    function openRoomFromGroups(room){
+    function joinPayload(room){
+      const password = groupPasswords.get(room);
+      return password ? { room, password } : room;
+    }
+
+    function createGroupCard(group){
+      const card = document.createElement("button");
+      card.className = "group-card";
+      card.type = "button";
+
+      const badge = document.createElement("div");
+      badge.className = "group-badge" + (group.isPrivate ? " private" : "");
+      badge.textContent = group.isPrivate ? "Private" : "Public";
+
+      const icon = document.createElement("div");
+      icon.className = "group-icon";
+      icon.textContent = group.isPrivate ? "⌕" : "#";
+
+      const title = document.createElement("div");
+      title.className = "group-card-title";
+      title.textContent = group.name;
+
+      const copy = document.createElement("div");
+      copy.className = "group-card-copy";
+      copy.textContent = group.isPrivate
+        ? "Password protected. Enter the group password to continue."
+        : "Open to every logged-in Adda Box user.";
+
+      const cta = document.createElement("div");
+      cta.className = "group-card-cta";
+      cta.textContent = group.isPrivate ? "Unlock group →" : "Open group →";
+
+      card.appendChild(badge);
+      card.appendChild(icon);
+      card.appendChild(title);
+      card.appendChild(copy);
+      card.appendChild(cta);
+
+      card.addEventListener("click", () => {
+        if(group.isPrivate) openPrivateGroupPrompt(group);
+        else openRoomFromGroups(group.slug);
+      });
+
+      return card;
+    }
+
+    function renderGroups(groups){
+      groupCatalog.clear();
+      const publicGrid = $("publicGroupsGrid");
+      const privateGrid = $("privateGroupsGrid");
+      if(!publicGrid || !privateGrid) return;
+
+      publicGrid.innerHTML = "";
+      privateGrid.innerHTML = "";
+
+      const publicGroups = [];
+      const privateGroups = [];
+
+      (groups || []).forEach(group => {
+        groupCatalog.set(group.slug,group);
+        if(group.isPrivate) privateGroups.push(group);
+        else publicGroups.push(group);
+      });
+
+      const renderEmpty = (grid,text) => {
+        const empty = document.createElement("div");
+        empty.className = "groups-empty";
+        empty.textContent = text;
+        grid.appendChild(empty);
+      };
+
+      publicGroups.forEach(group => publicGrid.appendChild(createGroupCard(group)));
+      privateGroups.forEach(group => privateGrid.appendChild(createGroupCard(group)));
+
+      if(publicGroups.length === 0) renderEmpty(publicGrid,"No public groups yet.");
+      if(privateGroups.length === 0) renderEmpty(privateGrid,"No private groups yet.");
+    }
+
+    async function loadGroups(){
+      if(!token) return;
+      try{
+        const res = await fetch("/api/groups",{
+          headers:{ Authorization:"Bearer " + token }
+        });
+        const data = await res.json();
+        if(res.status === 401) return hardLogout("Session expired. Please login again.");
+        if(!res.ok) throw new Error(data.error || "Could not load groups.");
+        renderGroups(data);
+      }catch(e){
+        const publicGrid = $("publicGroupsGrid");
+        const privateGrid = $("privateGroupsGrid");
+        if(publicGrid) publicGrid.innerHTML = '<div class="groups-empty">Could not load groups.</div>';
+        if(privateGrid) privateGrid.innerHTML = "";
+      }
+    }
+
+    function openPrivateGroupPrompt(group,errorMessage=""){
+      pendingPrivateGroup = group;
+      if($("privateGroupTitle")) $("privateGroupTitle").textContent = group?.name || "Private group";
+      if($("privateGroupPassword")) $("privateGroupPassword").value = "";
+      if($("privateGroupError")) $("privateGroupError").textContent = errorMessage;
+      $("privateGroupModal")?.classList?.add("show");
+      setTimeout(() => $("privateGroupPassword")?.focus?.(),0);
+    }
+
+    function closePrivateGroupPrompt(){
+      pendingPrivateGroup = null;
+      $("privateGroupModal")?.classList?.remove("show");
+      if($("privateGroupPassword")) $("privateGroupPassword").value = "";
+      if($("privateGroupError")) $("privateGroupError").textContent = "";
+    }
+
+    function openRoomFromGroups(room,password=""){
       const clean = (room || "general").trim() || "general";
+      if(password) groupPasswords.set(clean,password);
+
       setActiveRoom(clean);
       showChatScreen();
       showRoomWelcome(clean,"Loading recent messages…");
@@ -1032,7 +1285,7 @@
       }
 
       pendingHistoryRoom = clean;
-      socket.emit("room:join",clean);
+      socket.emit("room:join",joinPayload(clean));
     }
 
 
@@ -1285,6 +1538,8 @@
       closeSocket();
       joinedRooms.clear();
       userCache.clear();
+      groupPasswords.clear();
+      groupCatalog.clear();
 
       if($("token")) $("token").textContent = "(none)";
       if($("onlineList")) $("onlineList").innerHTML = "";
@@ -1487,8 +1742,12 @@
       showNotice("Loading #" + clean + "…","info",1200);
 
       try{
+        const historyHeaders = { Authorization:"Bearer " + token };
+        const groupPassword = groupPasswords.get(clean);
+        if(groupPassword) historyHeaders["X-Group-Password"] = groupPassword;
+
         const res = await fetch("/api/messages/" + encodeURIComponent(clean), {
-          headers:{ Authorization:"Bearer " + token }
+          headers:historyHeaders
         });
 
         const data = await res.json();
@@ -1531,11 +1790,11 @@
         log("Socket connected.",false);
 
         for(const room of joinedRooms){
-          socket.emit("room:join",room);
+          socket.emit("room:join",joinPayload(room));
         }
 
         if(pendingHistoryRoom && !readyRooms.has(pendingHistoryRoom)){
-          socket.emit("room:join",pendingHistoryRoom);
+          socket.emit("room:join",joinPayload(pendingHistoryRoom));
         }
       });
 
@@ -1552,7 +1811,19 @@
       });
 
       socket.on("room:error", data => {
+        const room = data?.room || pendingHistoryRoom;
         pendingHistoryRoom = null;
+
+        if(data?.code === "PRIVATE_GROUP_PASSWORD" && room){
+          readyRooms.delete(room);
+          joinedRooms.delete(room);
+          groupPasswords.delete(room);
+          showGroupsScreen();
+          const group = groupCatalog.get(room) || { name:room, slug:room, isPrivate:true };
+          openPrivateGroupPrompt(group,"Incorrect password. Please try again.");
+          return;
+        }
+
         log("Room error: " + (data && data.error ? data.error : "Unable to join room."));
       });
 
@@ -1601,7 +1872,7 @@
 
       const room = ($("room").value || "general").trim() || "general";
       setActiveRoom(room);
-      socket.emit("room:join",room);
+      socket.emit("room:join",joinPayload(room));
     };
 
     $("btnLoad").onclick = () => loadHistoryForRoom(($("room").value || "general").trim());
@@ -1659,19 +1930,66 @@
       });
     });
 
-    const groupCards = document.querySelectorAll ? document.querySelectorAll("[data-group-room]") : [];
-    groupCards.forEach(card => {
-      card.addEventListener("click", () => openRoomFromGroups(card.dataset.groupRoom));
+    $("newGroupVisibility")?.addEventListener?.("change", () => {
+      const isPrivate = $("newGroupVisibility").value === "private";
+      if($("newGroupPassword")?.style) $("newGroupPassword").style.display = isPrivate ? "block" : "none";
+      if(!isPrivate && $("newGroupPassword")) $("newGroupPassword").value = "";
     });
 
-    $("btnOpenCustomRoom")?.addEventListener?.("click", () => {
-      openRoomFromGroups(($("groupRoomInput")?.value || "").trim());
+    $("btnCreateGroup")?.addEventListener?.("click", async () => {
+      if(!token) return showAuthScreen();
+
+      const name = ($("newGroupName")?.value || "").trim();
+      const visibility = $("newGroupVisibility")?.value || "public";
+      const password = $("newGroupPassword")?.value || "";
+      if($("createGroupError")) $("createGroupError").textContent = "";
+
+      try{
+        const res = await fetch("/api/groups",{
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json",
+            Authorization:"Bearer " + token
+          },
+          body:JSON.stringify({ name, visibility, password })
+        });
+        const data = await res.json();
+
+        if(!res.ok){
+          const suffix = data.similarTo ? " Similar to: " + data.similarTo + "." : "";
+          if($("createGroupError")) $("createGroupError").textContent = (data.error || "Could not create group.") + suffix;
+          return;
+        }
+
+        if($("newGroupName")) $("newGroupName").value = "";
+        if($("newGroupPassword")) $("newGroupPassword").value = "";
+        if($("newGroupVisibility")) $("newGroupVisibility").value = "public";
+        if($("newGroupPassword")?.style) $("newGroupPassword").style.display = "none";
+
+        await loadGroups();
+      }catch(e){
+        if($("createGroupError")) $("createGroupError").textContent = "Could not create group.";
+      }
     });
 
-    $("groupRoomInput")?.addEventListener?.("keydown", e => {
+    $("btnCancelPrivateGroup")?.addEventListener?.("click", closePrivateGroupPrompt);
+
+    $("btnEnterPrivateGroup")?.addEventListener?.("click", () => {
+      if(!pendingPrivateGroup) return;
+      const group = pendingPrivateGroup;
+      const password = $("privateGroupPassword")?.value || "";
+      if(!password){
+        if($("privateGroupError")) $("privateGroupError").textContent = "Enter the group password.";
+        return;
+      }
+      closePrivateGroupPrompt();
+      openRoomFromGroups(group.slug,password);
+    });
+
+    $("privateGroupPassword")?.addEventListener?.("keydown", e => {
       if(e.key === "Enter"){
         e.preventDefault();
-        $("btnOpenCustomRoom")?.click?.();
+        $("btnEnterPrivateGroup")?.click?.();
       }
     });
 
