@@ -1086,7 +1086,7 @@
               <button id="btnBackGroups" class="back-groups-btn" type="button" aria-label="Back to groups" title="Back to groups">←</button>
               <div>
                 <div id="roomTitle" class="chat-room"># general</div>
-                <div class="chat-room-sub">MongoDB history • real-time Socket.IO messages</div>
+                <div class="chat-room-sub">End-to-end encrypted • digitally signed messages</div>
               </div>
             </div>
             <button id="btnLoadTop" class="history-btn">Load last 50</button>
@@ -1168,13 +1168,78 @@
       return bytes;
     }
 
-    function canonicalSignedMessageClient({ room, body, clientMessageId, signedAt, deviceId }){
+    function canonicalPublicJwkClient(jwk={}){
       return JSON.stringify({
+        kty:jwk.kty,
+        crv:jwk.crv,
+        x:jwk.x,
+        y:jwk.y
+      });
+    }
+
+    function canonicalKeyBindingClient({ userId, deviceId, encryptionPublicJwk }){
+      return JSON.stringify({
+        userId:String(userId || ""),
+        deviceId:String(deviceId || ""),
+        encryptionPublicJwk:canonicalPublicJwkClient(encryptionPublicJwk)
+      });
+    }
+
+    function canonicalEnvelopeClient(envelope={}){
+      return {
+        userId:String(envelope.userId || ""),
+        deviceId:String(envelope.deviceId || ""),
+        wrapIv:String(envelope.wrapIv || ""),
+        wrappedKey:String(envelope.wrappedKey || "")
+      };
+    }
+
+    function canonicalSignedMessageClient(payload={}){
+      if(Number(payload.encryptionVersion) === 1){
+        const keyEnvelopes = Array.isArray(payload.keyEnvelopes)
+          ? payload.keyEnvelopes
+              .map(canonicalEnvelopeClient)
+              .sort((a,b) => (a.userId + ":" + a.deviceId).localeCompare(b.userId + ":" + b.deviceId))
+          : [];
+
+        return JSON.stringify({
+          encryptionVersion:1,
+          room:String(payload.room || ""),
+          ciphertext:String(payload.ciphertext || ""),
+          iv:String(payload.iv || ""),
+          keyEnvelopes,
+          clientMessageId:String(payload.clientMessageId || ""),
+          signedAt:String(payload.signedAt || ""),
+          deviceId:String(payload.deviceId || "")
+        });
+      }
+
+      return JSON.stringify({
+        room:String(payload.room || ""),
+        body:String(payload.body || ""),
+        clientMessageId:String(payload.clientMessageId || ""),
+        signedAt:String(payload.signedAt || ""),
+        deviceId:String(payload.deviceId || "")
+      });
+    }
+
+    function encryptionAadClient({ room, clientMessageId, signedAt, deviceId }){
+      return JSON.stringify({
+        version:1,
         room:String(room || ""),
-        body:String(body || ""),
         clientMessageId:String(clientMessageId || ""),
         signedAt:String(signedAt || ""),
         deviceId:String(deviceId || "")
+      });
+    }
+
+    function wrapContextClient({ room, clientMessageId, senderDeviceId, recipientDeviceId }){
+      return JSON.stringify({
+        version:1,
+        room:String(room || ""),
+        clientMessageId:String(clientMessageId || ""),
+        senderDeviceId:String(senderDeviceId || ""),
+        recipientDeviceId:String(recipientDeviceId || "")
       });
     }
 
@@ -1223,28 +1288,55 @@
       }
     }
 
-    function getOrCreateDeviceId(userId){
-      const key = "adda_device_" + userId;
-      let deviceId = localStorage.getItem(key);
-      if(!deviceId){
-        const uuid = crypto.randomUUID ? crypto.randomUUID() : (
-          Date.now().toString(36) + "_" + Math.random().toString(36).slice(2)
-        );
-        deviceId = "web_" + uuid.replace(/[^A-Za-z0-9_-]/g,"");
-        localStorage.setItem(key,deviceId);
-      }
+    function createNewDeviceId(userId){
+      const uuid = crypto.randomUUID ? crypto.randomUUID() : (
+        Date.now().toString(36) + "_" + Math.random().toString(36).slice(2)
+      );
+      const deviceId = "web_" + uuid.replace(/[^A-Za-z0-9_-]/g,"");
+      localStorage.setItem("adda_device_" + userId,deviceId);
       return deviceId;
     }
 
+    function getOrCreateDeviceId(userId){
+      return localStorage.getItem("adda_device_" + userId) || createNewDeviceId(userId);
+    }
+
     async function publicKeyFingerprint(publicJwk){
-      const canonical = JSON.stringify({
-        kty:publicJwk.kty,
-        crv:publicJwk.crv,
-        x:publicJwk.x,
-        y:publicJwk.y
+      const digest = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(canonicalPublicJwkClient(publicJwk))
+      );
+      return Array.from(new Uint8Array(digest))
+        .map(byte => byte.toString(16).padStart(2,"0"))
+        .join("");
+    }
+
+    function pinFingerprint(kind,userId,deviceId,fingerprint){
+      if(!fingerprint) throw new Error("Missing key fingerprint.");
+      const storageKey = "adda_pin_" + kind + "_" + userId + "_" + deviceId;
+      const pinned = localStorage.getItem(storageKey);
+
+      if(pinned && pinned !== fingerprint){
+        throw new Error("Security key changed for this device.");
+      }
+
+      if(!pinned) localStorage.setItem(storageKey,fingerprint);
+    }
+
+    async function signEncryptionKeyBinding(identity){
+      const binding = canonicalKeyBindingClient({
+        userId:identity.userId,
+        deviceId:identity.deviceId,
+        encryptionPublicJwk:identity.encryptionPublicJwk
       });
-      const digest = await crypto.subtle.digest("SHA-256",new TextEncoder().encode(canonical));
-      return Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2,"0")).join("");
+
+      const signature = await crypto.subtle.sign(
+        { name:"ECDSA", hash:"SHA-256" },
+        identity.privateKey,
+        new TextEncoder().encode(binding)
+      );
+
+      return bytesToBase64(signature);
     }
 
     async function registerSigningIdentity(identity){
@@ -1257,86 +1349,187 @@
         body:JSON.stringify({
           deviceId:identity.deviceId,
           signingPublicJwk:identity.publicJwk,
+          encryptionPublicJwk:identity.encryptionPublicJwk,
+          encryptionKeySignature:identity.encryptionKeySignature,
           label:"Web browser"
         })
       });
 
       const data = await res.json();
-      if(!res.ok) throw new Error(data.error || "Could not register signing identity.");
+      if(!res.ok) throw new Error(data.error || "Could not register device cryptographic identity.");
       return data;
     }
 
     async function ensureSigningIdentity(){
-      if(!token || !currentUser?.id) throw new Error("Login is required before creating a signing identity.");
-      if(signingIdentity && String(signingIdentity.userId) === String(currentUser.id)) return signingIdentity;
+      if(!token || !currentUser?.id){
+        throw new Error("Login is required before creating a cryptographic identity.");
+      }
 
-      setSecurityStatus("Signing…",true,"Preparing this device's signing identity.");
+      if(
+        signingIdentity &&
+        String(signingIdentity.userId) === String(currentUser.id) &&
+        signingIdentity.encryptionPrivateKey
+      ){
+        return signingIdentity;
+      }
+
+      setSecurityStatus("Preparing E2EE…",true,"Preparing this device's encryption and signing keys.");
 
       const userId = String(currentUser.id);
-      const deviceId = getOrCreateDeviceId(userId);
-      const storageKey = userId + ":" + deviceId;
+      const priorDeviceId = localStorage.getItem("adda_device_" + userId);
+      let deviceId = getOrCreateDeviceId(userId);
+      let storageKey = userId + ":" + deviceId;
       let stored = await getStoredIdentity(storageKey);
 
+      // If browser storage was cleared but the old local device ID survived,
+      // rotate to a fresh device ID instead of silently replacing an existing key.
+      if(priorDeviceId && !stored){
+        deviceId = createNewDeviceId(userId);
+        storageKey = userId + ":" + deviceId;
+        stored = null;
+      }
+
       if(!stored?.privateKey || !stored?.publicJwk){
-        const pair = await crypto.subtle.generateKey(
+        const signingPair = await crypto.subtle.generateKey(
           { name:"ECDSA", namedCurve:"P-256" },
           true,
           ["sign","verify"]
         );
 
-        const publicJwk = await crypto.subtle.exportKey("jwk",pair.publicKey);
+        const publicJwk = await crypto.subtle.exportKey("jwk",signingPair.publicKey);
         const fingerprint = await publicKeyFingerprint(publicJwk);
 
         stored = {
           key:storageKey,
           userId,
           deviceId,
-          privateKey:pair.privateKey,
+          privateKey:signingPair.privateKey,
           publicJwk,
           fingerprint,
           createdAt:new Date().toISOString()
         };
-
-        await putStoredIdentity(stored);
       }
 
-      await registerSigningIdentity(stored);
-      signingIdentity = stored;
+      if(!stored.encryptionPrivateKey || !stored.encryptionPublicJwk){
+        const encryptionPair = await crypto.subtle.generateKey(
+          { name:"ECDH", namedCurve:"P-256" },
+          true,
+          ["deriveBits"]
+        );
 
-      const shortFingerprint = String(stored.fingerprint || "").match(/.{1,4}/g)?.slice(0,4).join(" ") || "ready";
-      setSecurityStatus("Signed ✓",true,"Device fingerprint: " + shortFingerprint);
+        stored.encryptionPrivateKey = encryptionPair.privateKey;
+        stored.encryptionPublicJwk = await crypto.subtle.exportKey("jwk",encryptionPair.publicKey);
+        stored.encryptionFingerprint = await publicKeyFingerprint(stored.encryptionPublicJwk);
+      }
+
+      stored.userId = userId;
+      stored.deviceId = deviceId;
+      stored.key = storageKey;
+      stored.encryptionKeySignature = await signEncryptionKeyBinding(stored);
+
+      await putStoredIdentity(stored);
+      await registerSigningIdentity(stored);
+
+      signingIdentity = stored;
+      signingKeyCache.clear();
+
+      const shortFingerprint = String(stored.encryptionFingerprint || "")
+        .match(/.{1,4}/g)?.slice(0,4).join(" ") || "ready";
+
+      setSecurityStatus(
+        "E2EE ✓",
+        true,
+        "Encryption key fingerprint: " + shortFingerprint
+      );
+
       return signingIdentity;
     }
 
-    async function signOutgoingMessage(room,body){
-      const identity = await ensureSigningIdentity();
-      const signedAt = new Date().toISOString();
-      const clientMessageId = crypto.randomUUID
-        ? crypto.randomUUID()
-        : Date.now().toString(36) + "_" + Math.random().toString(36).slice(2);
+    async function prepareDeviceKeyBundle(data){
+      if(!data?.userId || !data?.deviceId || !data?.signingPublicJwk){
+        throw new Error("Incomplete device key bundle.");
+      }
 
-      const payload = {
-        room,
-        body,
-        clientMessageId,
-        signedAt,
-        deviceId:identity.deviceId
-      };
+      const cacheKey = String(data.userId) + ":" + String(data.deviceId);
+      const cached = signingKeyCache.get(cacheKey);
 
-      const canonical = canonicalSignedMessageClient(payload);
-      const signatureBuffer = await crypto.subtle.sign(
-        { name:"ECDSA", hash:"SHA-256" },
-        identity.privateKey,
-        new TextEncoder().encode(canonical)
+      if(
+        cached &&
+        cached.signingFingerprint === data.signingFingerprint &&
+        cached.encryptionFingerprint === data.encryptionFingerprint
+      ){
+        return cached;
+      }
+
+      const signingFingerprint = await publicKeyFingerprint(data.signingPublicJwk);
+      if(data.signingFingerprint && signingFingerprint !== data.signingFingerprint){
+        throw new Error("Signing-key fingerprint mismatch.");
+      }
+
+      pinFingerprint("sign",data.userId,data.deviceId,signingFingerprint);
+
+      const signingKey = await crypto.subtle.importKey(
+        "jwk",
+        data.signingPublicJwk,
+        { name:"ECDSA", namedCurve:"P-256" },
+        false,
+        ["verify"]
       );
 
-      return {
-        ...payload,
-        signature:bytesToBase64(signatureBuffer)
+      let encryptionKey = null;
+      let encryptionFingerprint = null;
+
+      if(data.encryptionPublicJwk && data.encryptionKeySignature){
+        encryptionFingerprint = await publicKeyFingerprint(data.encryptionPublicJwk);
+
+        if(
+          data.encryptionFingerprint &&
+          encryptionFingerprint !== data.encryptionFingerprint
+        ){
+          throw new Error("Encryption-key fingerprint mismatch.");
+        }
+
+        const bindingOk = await crypto.subtle.verify(
+          { name:"ECDSA", hash:"SHA-256" },
+          signingKey,
+          base64ToBytes(data.encryptionKeySignature),
+          new TextEncoder().encode(
+            canonicalKeyBindingClient({
+              userId:data.userId,
+              deviceId:data.deviceId,
+              encryptionPublicJwk:data.encryptionPublicJwk
+            })
+          )
+        );
+
+        if(!bindingOk){
+          throw new Error("Encryption key is not signed by the device identity.");
+        }
+
+        pinFingerprint("enc",data.userId,data.deviceId,encryptionFingerprint);
+
+        encryptionKey = await crypto.subtle.importKey(
+          "jwk",
+          data.encryptionPublicJwk,
+          { name:"ECDH", namedCurve:"P-256" },
+          false,
+          []
+        );
+      }
+
+      const result = {
+        ...data,
+        signingKey,
+        signingFingerprint,
+        encryptionKey,
+        encryptionFingerprint
       };
+
+      signingKeyCache.set(cacheKey,result);
+      return result;
     }
 
-    async function getSigningKey(userId,deviceId){
+    async function getDeviceKeyBundle(userId,deviceId){
       const cacheKey = String(userId) + ":" + String(deviceId);
       if(signingKeyCache.has(cacheKey)) return signingKeyCache.get(cacheKey);
 
@@ -1345,24 +1538,205 @@
         { headers:{ Authorization:"Bearer " + token } }
       );
 
-      if(!res.ok) throw new Error("Signing key not found.");
-      const data = await res.json();
+      if(!res.ok) throw new Error("Device public key not found.");
+      return prepareDeviceKeyBundle(await res.json());
+    }
 
-      const key = await crypto.subtle.importKey(
-        "jwk",
-        data.signingPublicJwk,
-        { name:"ECDSA", namedCurve:"P-256" },
-        false,
-        ["verify"]
+    async function fetchGroupRecipients(room){
+      const headers = { Authorization:"Bearer " + token };
+      const password = groupPasswords.get(room);
+      if(password) headers["X-Group-Password"] = password;
+
+      const res = await fetch(
+        "/api/groups/" + encodeURIComponent(room) + "/recipients",
+        { headers }
       );
 
-      const result = { key, fingerprint:data.fingerprint };
-      signingKeyCache.set(cacheKey,result);
-      return result;
+      const data = await res.json();
+
+      if(res.status === 401){
+        hardLogout("Session expired. Please login again.");
+        throw new Error("Session expired.");
+      }
+
+      if(!res.ok){
+        throw new Error(data.error || "Could not load encrypted group recipients.");
+      }
+
+      if(data.encryptionReadyUserCount < data.memberCount){
+        throw new Error("A group member must reopen Adda Box once before encrypted messaging can continue.");
+      }
+
+      const recipients = await Promise.all(
+        (data.recipients || []).map(prepareDeviceKeyBundle)
+      );
+
+      if(recipients.length === 0){
+        throw new Error("No encryption-ready devices are registered for this group.");
+      }
+
+      if(recipients.some(recipient => !recipient.encryptionKey)){
+        throw new Error("A group device is not ready for end-to-end encryption.");
+      }
+
+      return recipients;
+    }
+
+    async function deriveWrappingKey(
+      ownPrivateKey,
+      otherPublicKey,
+      { room, clientMessageId, senderDeviceId, recipientDeviceId }
+    ){
+      const sharedBits = await crypto.subtle.deriveBits(
+        { name:"ECDH", public:otherPublicKey },
+        ownPrivateKey,
+        256
+      );
+
+      const hkdfMaterial = await crypto.subtle.importKey(
+        "raw",
+        sharedBits,
+        "HKDF",
+        false,
+        ["deriveKey"]
+      );
+
+      const info = wrapContextClient({
+        room,
+        clientMessageId,
+        senderDeviceId,
+        recipientDeviceId
+      });
+
+      return crypto.subtle.deriveKey(
+        {
+          name:"HKDF",
+          hash:"SHA-256",
+          salt:new TextEncoder().encode("AddaBox-E2EE-wrap-v1"),
+          info:new TextEncoder().encode(info)
+        },
+        hkdfMaterial,
+        { name:"AES-GCM", length:256 },
+        false,
+        ["encrypt","decrypt"]
+      );
+    }
+
+    async function encryptAndSignOutgoingMessage(room,body){
+      const identity = await ensureSigningIdentity();
+
+      if(body.length > 2000){
+        throw new Error("Message is too long.");
+      }
+
+      const signedAt = new Date().toISOString();
+      const clientMessageId = crypto.randomUUID
+        ? crypto.randomUUID()
+        : Date.now().toString(36) + "_" + Math.random().toString(36).slice(2);
+
+      const recipients = await fetchGroupRecipients(room);
+
+      const messageKeyBytes = crypto.getRandomValues(new Uint8Array(32));
+      const messageKey = await crypto.subtle.importKey(
+        "raw",
+        messageKeyBytes,
+        { name:"AES-GCM" },
+        false,
+        ["encrypt","decrypt"]
+      );
+
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const aad = encryptionAadClient({
+        room,
+        clientMessageId,
+        signedAt,
+        deviceId:identity.deviceId
+      });
+
+      const ciphertextBuffer = await crypto.subtle.encrypt(
+        {
+          name:"AES-GCM",
+          iv,
+          additionalData:new TextEncoder().encode(aad)
+        },
+        messageKey,
+        new TextEncoder().encode(body)
+      );
+
+      const keyEnvelopes = [];
+
+      for(const recipient of recipients){
+        const wrapKey = await deriveWrappingKey(
+          identity.encryptionPrivateKey,
+          recipient.encryptionKey,
+          {
+            room,
+            clientMessageId,
+            senderDeviceId:identity.deviceId,
+            recipientDeviceId:recipient.deviceId
+          }
+        );
+
+        const wrapIv = crypto.getRandomValues(new Uint8Array(12));
+        const wrapContext = wrapContextClient({
+          room,
+          clientMessageId,
+          senderDeviceId:identity.deviceId,
+          recipientDeviceId:recipient.deviceId
+        });
+
+        const wrappedKey = await crypto.subtle.encrypt(
+          {
+            name:"AES-GCM",
+            iv:wrapIv,
+            additionalData:new TextEncoder().encode(wrapContext)
+          },
+          wrapKey,
+          messageKeyBytes
+        );
+
+        keyEnvelopes.push({
+          userId:String(recipient.userId),
+          deviceId:String(recipient.deviceId),
+          wrapIv:bytesToBase64(wrapIv),
+          wrappedKey:bytesToBase64(wrappedKey)
+        });
+      }
+
+      const payload = {
+        encryptionVersion:1,
+        room,
+        ciphertext:bytesToBase64(ciphertextBuffer),
+        iv:bytesToBase64(iv),
+        keyEnvelopes,
+        clientMessageId,
+        signedAt,
+        deviceId:identity.deviceId
+      };
+
+      const signatureBuffer = await crypto.subtle.sign(
+        { name:"ECDSA", hash:"SHA-256" },
+        identity.privateKey,
+        new TextEncoder().encode(canonicalSignedMessageClient(payload))
+      );
+
+      return {
+        ...payload,
+        signature:bytesToBase64(signatureBuffer)
+      };
+    }
+
+    async function signOutgoingMessage(room,body){
+      return encryptAndSignOutgoingMessage(room,body);
     }
 
     async function verifyIncomingSignature(message){
-      if(!message?.signature || !message?.deviceId || !message?.clientMessageId || !message?.signedAt){
+      if(
+        !message?.signature ||
+        !message?.deviceId ||
+        !message?.clientMessageId ||
+        !message?.signedAt
+      ){
         return null;
       }
 
@@ -1373,24 +1747,121 @@
       if(!fromValue) return false;
 
       try{
-        const signingKey = await getSigningKey(fromValue,message.deviceId);
-        const canonical = canonicalSignedMessageClient({
-          room:message.room,
-          body:message.body,
-          clientMessageId:message.clientMessageId,
-          signedAt:new Date(message.signedAt).toISOString(),
-          deviceId:message.deviceId
-        });
+        const bundle = await getDeviceKeyBundle(fromValue,message.deviceId);
+
+        const canonicalPayload = Number(message.encryptionVersion) === 1
+          ? {
+              encryptionVersion:1,
+              room:message.room,
+              ciphertext:message.ciphertext,
+              iv:message.iv,
+              keyEnvelopes:message.keyEnvelopes,
+              clientMessageId:message.clientMessageId,
+              signedAt:new Date(message.signedAt).toISOString(),
+              deviceId:message.deviceId
+            }
+          : {
+              room:message.room,
+              body:message.body,
+              clientMessageId:message.clientMessageId,
+              signedAt:new Date(message.signedAt).toISOString(),
+              deviceId:message.deviceId
+            };
 
         return crypto.subtle.verify(
           { name:"ECDSA", hash:"SHA-256" },
-          signingKey.key,
+          bundle.signingKey,
           base64ToBytes(message.signature),
-          new TextEncoder().encode(canonical)
+          new TextEncoder().encode(canonicalSignedMessageClient(canonicalPayload))
         );
       }catch{
         return false;
       }
+    }
+
+    async function decryptIncomingMessage(message){
+      if(Number(message?.encryptionVersion) !== 1){
+        return message?.body ?? "";
+      }
+
+      const identity = await ensureSigningIdentity();
+      const myUserId = String(currentUser?.id || "");
+
+      const envelope = (message.keyEnvelopes || []).find(item =>
+        String(item.userId) === myUserId &&
+        String(item.deviceId) === String(identity.deviceId)
+      );
+
+      if(!envelope){
+        throw new Error("This device did not receive the encryption key for this message.");
+      }
+
+      const fromValue = message.from && typeof message.from === "object"
+        ? (message.from._id || message.from.id)
+        : message.from;
+
+      const senderBundle = await getDeviceKeyBundle(fromValue,message.deviceId);
+
+      if(!senderBundle.encryptionKey){
+        throw new Error("Sender encryption key is unavailable.");
+      }
+
+      const signedAt = new Date(message.signedAt).toISOString();
+
+      const wrapKey = await deriveWrappingKey(
+        identity.encryptionPrivateKey,
+        senderBundle.encryptionKey,
+        {
+          room:message.room,
+          clientMessageId:message.clientMessageId,
+          senderDeviceId:message.deviceId,
+          recipientDeviceId:identity.deviceId
+        }
+      );
+
+      const wrapContext = wrapContextClient({
+        room:message.room,
+        clientMessageId:message.clientMessageId,
+        senderDeviceId:message.deviceId,
+        recipientDeviceId:identity.deviceId
+      });
+
+      const messageKeyBytes = await crypto.subtle.decrypt(
+        {
+          name:"AES-GCM",
+          iv:base64ToBytes(envelope.wrapIv),
+          additionalData:new TextEncoder().encode(wrapContext)
+        },
+        wrapKey,
+        base64ToBytes(envelope.wrappedKey)
+      );
+
+      const messageKey = await crypto.subtle.importKey(
+        "raw",
+        messageKeyBytes,
+        { name:"AES-GCM" },
+        false,
+        ["decrypt"]
+      );
+
+      const aad = encryptionAadClient({
+        room:message.room,
+        clientMessageId:message.clientMessageId,
+        signedAt,
+        deviceId:message.deviceId
+      });
+
+      const plaintext = await crypto.subtle.decrypt(
+        {
+          name:"AES-GCM",
+          iv:base64ToBytes(message.iv),
+          additionalData:new TextEncoder().encode(aad)
+        },
+        messageKey,
+        base64ToBytes(message.ciphertext)
+      );
+
+      return new TextDecoder().decode(plaintext);
     }
 
     function preferredTheme(){
@@ -1725,7 +2196,11 @@
         userCache.get(String(fromValue)) ||
         "User";
 
-      const mine = Boolean(currentUser && fromValue && String(currentUser.id) === String(fromValue));
+      const mine = Boolean(
+        currentUser &&
+        fromValue &&
+        String(currentUser.id) === String(fromValue)
+      );
 
       appendDateSeparator(message.createdAt);
 
@@ -1753,6 +2228,14 @@
       meta.appendChild(name);
       if(time.textContent) meta.appendChild(time);
 
+      if(Number(message.encryptionVersion) === 1){
+        const encryptedBadge = document.createElement("span");
+        encryptedBadge.className = "signature-badge";
+        encryptedBadge.textContent = "Encrypted 🔒";
+        encryptedBadge.title = "Message content is end-to-end encrypted";
+        meta.appendChild(encryptedBadge);
+      }
+
       if(message.signature && message.deviceId){
         const signatureBadge = document.createElement("span");
         signatureBadge.className = "signature-badge checking";
@@ -1776,7 +2259,21 @@
 
       const bubble = document.createElement("div");
       bubble.className = "bubble";
-      bubble.textContent = message.body;
+
+      if(Number(message.encryptionVersion) === 1){
+        bubble.textContent = "Decrypting…";
+
+        decryptIncomingMessage(message)
+          .then(plaintext => {
+            bubble.textContent = plaintext;
+          })
+          .catch(err => {
+            bubble.textContent = "🔒 Encrypted message unavailable on this device.";
+            bubble.title = err.message;
+          });
+      }else{
+        bubble.textContent = message.body || "";
+      }
 
       wrap.appendChild(meta);
       wrap.appendChild(bubble);
@@ -1909,7 +2406,7 @@
         try{
           await ensureSigningIdentity();
         }catch(e){
-          setSecurityStatus("Signing unavailable",false,e.message);
+          setSecurityStatus("E2EE unavailable",false,e.message);
         }
         showGroupsScreen();
         connect();
@@ -1936,7 +2433,7 @@
         try{
           await ensureSigningIdentity();
         }catch(e){
-          setSecurityStatus("Signing unavailable",false,e.message);
+          setSecurityStatus("E2EE unavailable",false,e.message);
         }
         showGroupsScreen();
         connect();
@@ -2226,8 +2723,8 @@
         socket.emit("message:send",signedMessage);
         $("msg").value = "";
       }catch(e){
-        setSecurityStatus("Signing unavailable",false,e.message);
-        log("Message not sent: digital signing failed. Your draft is kept.");
+        setSecurityStatus("E2EE unavailable",false,e.message);
+        log("Message not sent: encryption/signing failed. Your draft is kept.");
       }
     };
 
@@ -2354,7 +2851,7 @@
           try{
             await ensureSigningIdentity();
           }catch(e){
-            setSecurityStatus("Signing unavailable",false,e.message);
+            setSecurityStatus("E2EE unavailable",false,e.message);
           }
           showGroupsScreen();
           hydrateProfile();
