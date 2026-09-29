@@ -10,6 +10,7 @@ import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/messages.routes.js";
 import usersRoutes from "./routes/users.routes.js";
 import groupsRoutes from "./routes/groups.routes.js";
+import keyRoutes from "./routes/keys.routes.js";
 import { initSocket } from "./socket.js";
 import { ensureDefaultGroups } from "./services/groups.js";
 
@@ -51,6 +52,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/groups", groupsRoutes);
+app.use("/api/keys", keyRoutes);
 
 // 5) HTTP server + Socket.IO
 const server = http.createServer(app);
