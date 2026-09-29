@@ -43,6 +43,8 @@ function setup() {
       removeItem: key => storage.delete(key)
     },
     atob: value => Buffer.from(value, "base64").toString("binary"),
+    setTimeout: () => 1,
+    clearTimeout: () => {},
     fetch: () => { throw new Error("Unexpected network request in this test"); },
     io: () => {
       const handlers = new Map();
@@ -115,7 +117,7 @@ test("reconnect restores each confirmed room once, regardless of the edited room
   assert.equal(app.element("connectionStatus").textContent, "Connected.");
 });
 
-test("offline send preserves the draft and queues neither messages nor room joins", () => {
+test("offline send preserves the draft and queues neither messages nor room joins", async () => {
   const app = setup();
   const socket = app.sockets[0];
   socket.trigger("connect");
@@ -123,7 +125,7 @@ test("offline send preserves the draft and queues neither messages nor room join
   socket.trigger("disconnect");
   socket.emitted.length = 0;
   app.element("msg").value = "Keep this draft";
-  app.element("btnSend").onclick();
+  await app.element("btnSend").onclick();
   app.element("btnJoin").onclick();
   assert.equal(app.element("msg").value, "Keep this draft");
   assert.deepEqual(socket.emitted, []);
@@ -155,7 +157,7 @@ test("sending waits for room confirmation after reconnect, then works normally",
   assert.equal(app.element("msg").value, "");
 });
 
-test("an unjoined room cannot receive a send from this client", () => {
+test("an unjoined room cannot receive a send from this client", async () => {
   const app = setup();
   const socket = app.sockets[0];
   socket.trigger("connect");
@@ -163,7 +165,7 @@ test("an unjoined room cannot receive a send from this client", () => {
   socket.emitted.length = 0;
   app.element("room").value = "another-room";
   app.element("msg").value = "Draft";
-  app.element("btnSend").onclick();
+  await app.element("btnSend").onclick();
   assert.deepEqual(socket.emitted, []);
   assert.equal(app.element("msg").value, "Draft");
 });
