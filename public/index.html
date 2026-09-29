@@ -415,6 +415,161 @@
       clip:rect(0,0,0,0);white-space:nowrap;
     }
 
+
+    .theme-toggle{
+      display:flex;align-items:center;justify-content:center;gap:7px;
+      min-width:72px;padding:8px 10px;
+      border:1px solid var(--line);border-radius:11px;
+      background:#f7f8fb;color:#555b68;
+      font-size:10px;font-weight:850;
+    }
+    .theme-toggle:hover{background:#efeff5}
+    .theme-icon{font-size:13px;line-height:1}
+
+    body.dark-mode{
+      --ink:#f2f2f7;
+      --muted:#989cab;
+      --line:#282a38;
+      --panel:#14151f;
+      --soft:#181923;
+      color-scheme:dark;
+      background:
+        radial-gradient(circle at 16% 14%,rgba(124,45,244,.18),transparent 31%),
+        radial-gradient(circle at 85% 12%,rgba(42,111,190,.14),transparent 29%),
+        radial-gradient(circle at 76% 84%,rgba(177,60,128,.12),transparent 30%),
+        linear-gradient(135deg,#090a10 0%,#0c0d15 48%,#111019 100%);
+    }
+    body.dark-mode::before{
+      opacity:.18;
+      background-image:
+        linear-gradient(30deg,rgba(159,105,255,.10) 12%,transparent 12.5%,transparent 87%,rgba(159,105,255,.10) 87.5%,rgba(159,105,255,.10)),
+        linear-gradient(150deg,rgba(159,105,255,.10) 12%,transparent 12.5%,transparent 87%,rgba(159,105,255,.10) 87.5%,rgba(159,105,255,.10));
+    }
+    body.dark-mode .app-card{
+      background:rgba(14,15,23,.96);
+      border-color:rgba(255,255,255,.06);
+      box-shadow:0 28px 80px rgba(0,0,0,.42);
+    }
+    body.dark-mode .topbar{
+      background:rgba(17,18,28,.94);
+      border-color:var(--line);
+    }
+    body.dark-mode .brand-title,
+    body.dark-mode .chat-room,
+    body.dark-mode .auth-title{color:#f5f5fa}
+    body.dark-mode .brand-sub,
+    body.dark-mode .chat-room-sub,
+    body.dark-mode .auth-hint,
+    body.dark-mode .auth-help,
+    body.dark-mode .section-label{color:#9095a6}
+    body.dark-mode .profile-chip,
+    body.dark-mode .status-pill,
+    body.dark-mode .theme-toggle,
+    body.dark-mode .ghost-btn{
+      background:#191a25;
+      border-color:#2b2d3b;
+      color:#c9cbd5;
+    }
+    body.dark-mode .theme-toggle:hover,
+    body.dark-mode .ghost-btn:hover{background:#222331}
+    body.dark-mode .profile-name{color:#f0f0f6}
+    body.dark-mode .profile-meta{color:#858a9b}
+    body.dark-mode .profile-avatar{
+      background:#30264a;color:#c9a9ff;
+    }
+    body.dark-mode .auth-panel{
+      background:linear-gradient(180deg,rgba(22,20,34,.98),rgba(15,16,24,.96));
+      border-color:var(--line);
+    }
+    body.dark-mode .auth-box,
+    body.dark-mode .join-card,
+    body.dark-mode .online-summary{
+      background:#171822;border-color:#2a2c39;
+    }
+    body.dark-mode .auth-box-title{color:#a6a9b5}
+    body.dark-mode .field,
+    body.dark-mode .mini-input{
+      background:#11121a;border-color:#303240;color:#ececf3;
+    }
+    body.dark-mode .field:focus{
+      background:#14151f;border-color:#8d58ef;
+      box-shadow:0 0 0 3px rgba(124,45,244,.16);
+    }
+    body.dark-mode input::placeholder{color:#777c8d}
+    body.dark-mode .sidebar{background:rgba(15,16,24,.94)}
+    body.dark-mode .sidebar-left,
+    body.dark-mode .sidebar-right{border-color:var(--line)}
+    body.dark-mode .room-chip{
+      background:#171822;border-color:#292b38;color:#c2c5d0;
+    }
+    body.dark-mode .room-chip:hover{
+      background:#211c30;border-color:#4d3a73;color:#c8a5ff;
+    }
+    body.dark-mode .room-chip.active{
+      background:#2a1e41;border-color:#493267;color:#c9a8ff;
+      box-shadow:0 6px 15px rgba(0,0,0,.16);
+    }
+    body.dark-mode .mini-btn{
+      background:#2b2141;color:#c8a7ff;
+    }
+    body.dark-mode .mini-btn.secondary{
+      background:#20212c;color:#b8bbc7;
+    }
+    body.dark-mode .chat{background:rgba(13,14,21,.94)}
+    body.dark-mode .chat-head{border-color:var(--line)}
+    body.dark-mode .history-btn{
+      background:#292039;border-color:#44315f;color:#caaaff;
+    }
+    body.dark-mode .notice-bar{
+      background:#221c31;border-color:#3b2d54;color:#c7aedf;
+    }
+    body.dark-mode .notice-bar.error{
+      background:#32191f;border-color:#57303a;color:#f0aab5;
+    }
+    body.dark-mode .empty-state{color:#898e9e}
+    body.dark-mode .empty-state b{color:#dfe0e8}
+    body.dark-mode .empty-state strong{color:#b994ff}
+    body.dark-mode .empty-icon{
+      background:#281d3f;color:#c29cff;
+    }
+    body.dark-mode .system-message{
+      background:#1b1c26;border-color:#292b37;color:#989dab;
+    }
+    body.dark-mode .system-message.error{
+      background:#32191f;border-color:#57303a;color:#f0aab5;
+    }
+    body.dark-mode .date-separator{color:#737887}
+    body.dark-mode .date-separator::before,
+    body.dark-mode .date-separator::after{background:#242632}
+    body.dark-mode .avatar{
+      background:#2d2343;color:#c29fff;
+    }
+    body.dark-mode .sender-line,
+    body.dark-mode .message-time{color:#777d8d}
+    body.dark-mode .sender-name{color:#b58afc}
+    body.dark-mode .message-row.mine .sender-name{color:#aa8fd2}
+    body.dark-mode .bubble{
+      background:#201b2d;border-color:#312640;color:#e0dde8;
+    }
+    body.dark-mode .composer-wrap{
+      background:rgba(15,16,24,.97);
+      border-color:var(--line);
+    }
+    body.dark-mode .composer{
+      background:#15161f;border-color:#2b2d3a;
+      box-shadow:0 6px 18px rgba(0,0,0,.12);
+    }
+    body.dark-mode .composer input{color:#f0f0f5}
+    body.dark-mode .online-summary{color:#8f94a4}
+    body.dark-mode .online-summary strong{color:#ededf4}
+    body.dark-mode .online-user:hover{background:#1f1b2c}
+    body.dark-mode .presence-avatar{
+      background:#2d2343;color:#c5a3ff;
+    }
+    body.dark-mode .presence-avatar::after{border-color:#15161f}
+    body.dark-mode .presence-name{color:#e4e5ec}
+    body.dark-mode .presence-state{color:#868b9b}
+
     @media (max-width:1100px){
       .workspace{grid-template-columns:210px minmax(0,1fr)}
       .sidebar-right{display:none}
@@ -428,6 +583,8 @@
       .top-actions{gap:6px}
       .profile-chip{padding:5px}
       .status-pill{padding:7px 9px}
+      .theme-toggle{min-width:40px;padding:7px 9px}
+      #themeLabel{display:none}
       .workspace{height:auto;min-height:0;display:flex;flex-direction:column}
       .sidebar-left{padding:12px;border-right:0;border-bottom:1px solid var(--line)}
       .room-list{display:grid;grid-template-columns:repeat(2,1fr)}
@@ -457,6 +614,12 @@
         </div>
 
         <div class="top-actions">
+
+          <button id="btnTheme" class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch theme">
+            <span id="themeIcon" class="theme-icon">☾</span>
+            <span id="themeLabel">Dark</span>
+          </button>
+
           <div id="profileChip" class="profile-chip">
             <div id="profileAvatar" class="profile-avatar">U</div>
             <div class="profile-copy">
@@ -575,6 +738,41 @@
     const userCache = new Map();
 
     const $ = (id) => document.getElementById(id);
+
+
+    function preferredTheme(){
+      const savedTheme = localStorage.getItem("adda_theme");
+      if(savedTheme === "dark" || savedTheme === "light") return savedTheme;
+      if(window.matchMedia?.("(prefers-color-scheme: dark)")?.matches) return "dark";
+      return "light";
+    }
+
+    function applyTheme(theme){
+      const dark = theme === "dark";
+      document.body?.classList?.toggle("dark-mode",dark);
+
+      const icon = $("themeIcon");
+      const label = $("themeLabel");
+      const button = $("btnTheme");
+
+      if(icon) icon.textContent = dark ? "☀" : "☾";
+      if(label) label.textContent = dark ? "Light" : "Dark";
+
+      if(button){
+        button.setAttribute?.("aria-label",dark ? "Switch to light mode" : "Switch to dark mode");
+        button.setAttribute?.("title",dark ? "Switch to light mode" : "Switch to dark mode");
+      }
+    }
+
+    function toggleTheme(){
+      const darkNow = Boolean(document.body?.classList?.contains?.("dark-mode"));
+      const nextTheme = darkNow ? "light" : "dark";
+      localStorage.setItem("adda_theme",nextTheme);
+      applyTheme(nextTheme);
+    }
+
+    applyTheme(preferredTheme());
+
 
     function initials(name){
       const clean = String(name || "U").trim();
@@ -898,6 +1096,7 @@
       }
     };
 
+    $("btnTheme").onclick = toggleTheme;
     $("btnLogout").onclick = () => hardLogout("Logged out by user.");
 
     let onlineSet = new Set();
