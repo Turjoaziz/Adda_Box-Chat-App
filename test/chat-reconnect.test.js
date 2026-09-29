@@ -50,6 +50,18 @@ function setup() {
     }
   });
   vm.runInContext(clientCode, context);
+
+  // Message sending now signs in the browser before Socket.IO emits.
+  // Keep reconnect tests focused on transport behavior with a deterministic signer.
+  context.signOutgoingMessage = async (room, body) => ({
+    room,
+    body,
+    deviceId: "web_test_device_123456",
+    clientMessageId: "test_message_id_123456",
+    signedAt: "2099-01-01T00:00:00.000Z",
+    signature: "test-signature-value"
+  });
+
   context.saveToken(token);
   context.connect();
   const logs = () => element("log").children.map(child => child.textContent);
@@ -105,7 +117,7 @@ test("offline send preserves the draft and queues neither messages nor room join
   assert.ok(app.logs().some(line => line.includes("you are offline")));
 });
 
-test("sending waits for room confirmation after reconnect, then works normally", () => {
+test("sending waits for room confirmation after reconnect, then works normally", async () => {
   const app = setup();
   const socket = app.sockets[0];
   socket.trigger("connect");
@@ -114,12 +126,19 @@ test("sending waits for room confirmation after reconnect, then works normally",
   socket.trigger("connect");
   socket.emitted.length = 0;
   app.element("msg").value = "Hello again";
-  app.element("btnSend").onclick();
+  await app.element("btnSend").onclick();
   assert.equal(app.element("msg").value, "Hello again");
   assert.deepEqual(socket.emitted, []);
   socket.trigger("room:joined", "general");
-  app.element("btnSend").onclick();
-  assert.deepEqual(socket.emitted, [["message:send", { room: "general", body: "Hello again" }]]);
+  await app.element("btnSend").onclick();
+  assert.deepEqual(socket.emitted, [["message:send", {
+    room: "general",
+    body: "Hello again",
+    deviceId: "web_test_device_123456",
+    clientMessageId: "test_message_id_123456",
+    signedAt: "2099-01-01T00:00:00.000Z",
+    signature: "test-signature-value"
+  }]]);
   assert.equal(app.element("msg").value, "");
 });
 
