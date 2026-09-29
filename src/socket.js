@@ -1,7 +1,9 @@
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import User from "./models/User.js";
+import DeviceKey from "./models/DeviceKey.js";
 import { findGroupBySlug, verifyGroupAccess } from "./services/groups.js";
+import { isValidSignedMessageMetadata, verifySignedMessage } from "./services/signatures.js";
 
 export const MAX_ROOM_LENGTH = 50;
 export const MAX_MESSAGE_LENGTH = 2000;
@@ -130,20 +132,92 @@ export function initSocket(httpServer, corsOrigin) {
         return;
       }
 
+      const signedPayload = {
+        room,
+        body,
+        clientMessageId: payload?.clientMessageId,
+        signedAt: payload?.signedAt,
+        deviceId: payload?.deviceId,
+        signature: payload?.signature
+      };
+
+      if (!isValidSignedMessageMetadata(signedPayload)) {
+        socket.emit("message:error", {
+          error: "A valid digital signature is required",
+          code: "SIGNATURE_REQUIRED"
+        });
+        return;
+      }
+
       try {
+        const deviceKey = await DeviceKey.findOne({
+          user: userId,
+          deviceId: signedPayload.deviceId,
+          revokedAt: null
+        }).lean();
+
+        if (!deviceKey) {
+          socket.emit("message:error", {
+            error: "This device signing key is not registered",
+            code: "SIGNING_KEY_NOT_REGISTERED"
+          });
+          return;
+        }
+
+        const signatureOk = await verifySignedMessage(
+          deviceKey.signingPublicJwk,
+          signedPayload
+        );
+
+        if (!signatureOk) {
+          socket.emit("message:error", {
+            error: "Digital signature verification failed",
+            code: "INVALID_SIGNATURE"
+          });
+          return;
+        }
+
         // Lazy import to avoid cycle
         const { default: Message } = await import("./models/Message.js");
-        const saved = await Message.create({ room, from: userId, body });
+
+        const replay = await Message.findOne({
+          from: userId,
+          clientMessageId: signedPayload.clientMessageId
+        }).lean();
+
+        if (replay) {
+          socket.emit("message:error", {
+            error: "Duplicate signed message rejected",
+            code: "DUPLICATE_MESSAGE"
+          });
+          return;
+        }
+
+        const saved = await Message.create({
+          room,
+          from: userId,
+          body,
+          deviceId: signedPayload.deviceId,
+          clientMessageId: signedPayload.clientMessageId,
+          signedAt: new Date(signedPayload.signedAt),
+          signature: signedPayload.signature,
+          signatureVerified: true
+        });
 
         io.to(room).emit("message:new", {
           _id: saved._id,
           room,
           from: userId,
           body,
+          deviceId: saved.deviceId,
+          clientMessageId: saved.clientMessageId,
+          signedAt: saved.signedAt,
+          signature: saved.signature,
+          signatureVerified: true,
           createdAt: saved.createdAt
         });
       } catch (err) {
-        console.error("Failed to save chat message:", err);
+        console.error("Failed to save signed chat message:", err);
         socket.emit("message:error", { error: "Message could not be sent" });
       }
     });
