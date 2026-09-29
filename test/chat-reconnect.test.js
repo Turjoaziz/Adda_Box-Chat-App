@@ -13,8 +13,21 @@ function setup() {
   const elements = new Map();
   const element = id => {
     if (!elements.has(id)) elements.set(id, {
-      value: id === "room" ? "general" : "", textContent: "", innerHTML: "",
-      children: [], addEventListener() {},
+      value: id === "room" ? "general" : "",
+      textContent: "",
+      innerHTML: "",
+      children: [],
+      style: {},
+      classList: {
+        toggle() {},
+        add() {},
+        remove() {},
+        contains() { return false; }
+      },
+      addEventListener() {},
+      setAttribute() {},
+      focus() {},
+      remove() { this.removed = true; },
       appendChild(child) { this.children.push(child); }
     });
     return elements.get(id);
