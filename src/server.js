@@ -9,7 +9,9 @@ import { validateEnv } from "./config/env.js";
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/messages.routes.js";
 import usersRoutes from "./routes/users.routes.js";
+import groupsRoutes from "./routes/groups.routes.js";
 import { initSocket } from "./socket.js";
+import { ensureDefaultGroups } from "./services/groups.js";
 
 // Fail early instead of discovering missing settings during login or signup.
 let config;
@@ -48,6 +50,7 @@ app.get("/healthz", (req, res) => res.json({ ok: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", usersRoutes);
+app.use("/api/groups", groupsRoutes);
 
 // 5) HTTP server + Socket.IO
 const server = http.createServer(app);
@@ -57,7 +60,10 @@ const PORT = config.port;
 
 // 6) Connect DB then start
 connectDB(process.env.MONGO_URI)
-  .then(() => server.listen(PORT, () => console.log(`🚀 Adda_Box listening on ${PORT}`)))
+  .then(async () => {
+    await ensureDefaultGroups();
+    server.listen(PORT, () => console.log(`🚀 Adda_Box listening on ${PORT}`));
+  })
   .catch((err) => {
     console.error("DB connection failed:", err);
     process.exit(1);
