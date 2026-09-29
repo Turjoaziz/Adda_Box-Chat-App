@@ -22,6 +22,22 @@ const deviceKeySchema = new mongoose.Schema(
       type: String,
       required: true
     },
+
+    // Separate ECDH identity used only for end-to-end message-key wrapping.
+    encryptionPublicJwk: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
+    },
+    encryptionFingerprint: {
+      type: String,
+      default: null
+    },
+    encryptionKeySignature: {
+      type: String,
+      default: null,
+      maxlength: 1000
+    },
+
     label: {
       type: String,
       maxlength: 80,
