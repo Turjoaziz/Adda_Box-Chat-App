@@ -2,8 +2,13 @@ import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import User from "./models/User.js";
 import DeviceKey from "./models/DeviceKey.js";
+import GroupMember from "./models/GroupMember.js";
 import { findGroupBySlug, verifyGroupAccess } from "./services/groups.js";
-import { isValidSignedMessageMetadata, verifySignedMessage } from "./services/signatures.js";
+import {
+  isValidSignedMessageMetadata,
+  isValidEncryptedMessagePayload,
+  verifySignedMessage
+} from "./services/signatures.js";
 
 export const MAX_ROOM_LENGTH = 50;
 export const MAX_MESSAGE_LENGTH = 2000;
@@ -23,6 +28,8 @@ export function normalizeRoomName(value) {
   return room;
 }
 
+// Retained for legacy validation tests and historical plaintext messages.
+// New Socket.IO messages are required to be encrypted before reaching the server.
 export function normalizeMessageBody(value) {
   if (typeof value !== "string") return null;
 
@@ -40,17 +47,16 @@ export function canSendToRoom(socket, room) {
 const onlineUsers = new Map();
 
 function presenceList() {
-  // return minimal info for UI
   return Array.from(onlineUsers.keys());
 }
 
 export function initSocket(httpServer, corsOrigin) {
   const io = new Server(httpServer, { cors: { origin: corsOrigin, credentials: true } });
 
-  // Auth handshake via JWT token
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token || socket.handshake.query?.token;
     if (!token) return next(new Error("No token"));
+
     try {
       const payload = jwt.verify(token, process.env.JWT_SECRET);
       socket.user = { id: payload.id, email: payload.email };
@@ -63,20 +69,12 @@ export function initSocket(httpServer, corsOrigin) {
   io.on("connection", async (socket) => {
     const userId = socket.user.id;
 
-    // Mark online in memory
     onlineUsers.set(userId, (onlineUsers.get(userId) || 0) + 1);
-
-    // Mark online in DB (fire and forget)
     User.findByIdAndUpdate(userId, { isOnline: true }).catch(() => {});
 
-    // Send initial presence list to this client
     socket.emit("presence:init", presenceList());
-
-    // Broadcast this user's online status
     io.emit("presence:update", { userId, isOnline: true });
 
-    // Rooms will be joined by client via "room:join".
-    // Validation here prevents a custom Socket.IO client from bypassing UI checks.
     socket.on("room:join", async (requestedRoom) => {
       const request =
         typeof requestedRoom === "string"
@@ -91,7 +89,11 @@ export function initSocket(httpServer, corsOrigin) {
 
       const group = await findGroupBySlug(room, true);
       if (!group) {
-        socket.emit("room:error", { error: "Group does not exist", code: "GROUP_NOT_FOUND", room });
+        socket.emit("room:error", {
+          error: "Group does not exist",
+          code: "GROUP_NOT_FOUND",
+          room
+        });
         return;
       }
 
@@ -105,41 +107,50 @@ export function initSocket(httpServer, corsOrigin) {
         return;
       }
 
+      await GroupMember.updateOne(
+        { group: group._id, user: userId },
+        { $setOnInsert: { joinedAt: new Date() } },
+        { upsert: true }
+      );
+
       await socket.join(group.slug);
       socket.emit("room:joined", group.slug);
     });
 
     socket.on("message:send", async (payload = {}) => {
       const room = normalizeRoomName(payload?.room);
-      const body = normalizeMessageBody(payload?.body);
 
       if (!room) {
         socket.emit("message:error", { error: "Invalid room name" });
         return;
       }
 
-      if (!body) {
+      if (!canSendToRoom(socket, room)) {
         socket.emit("message:error", {
-          error: `Message must be between 1 and ${MAX_MESSAGE_LENGTH} characters`
+          error: "Join the room before sending a message"
         });
         return;
       }
 
-      // Critical server-side protection: a client can only send to a room this
-      // socket has actually joined. Frontend checks alone are not a security boundary.
-      if (!canSendToRoom(socket, room)) {
-        socket.emit("message:error", { error: "Join the room before sending a message" });
-        return;
-      }
-
       const signedPayload = {
+        encryptionVersion: payload?.encryptionVersion,
         room,
-        body,
+        ciphertext: payload?.ciphertext,
+        iv: payload?.iv,
+        keyEnvelopes: payload?.keyEnvelopes,
         clientMessageId: payload?.clientMessageId,
         signedAt: payload?.signedAt,
         deviceId: payload?.deviceId,
         signature: payload?.signature
       };
+
+      if (!isValidEncryptedMessagePayload(signedPayload)) {
+        socket.emit("message:error", {
+          error: "End-to-end encrypted message payload required",
+          code: "E2EE_REQUIRED"
+        });
+        return;
+      }
 
       if (!isValidSignedMessageMetadata(signedPayload)) {
         socket.emit("message:error", {
@@ -153,13 +164,14 @@ export function initSocket(httpServer, corsOrigin) {
         const deviceKey = await DeviceKey.findOne({
           user: userId,
           deviceId: signedPayload.deviceId,
-          revokedAt: null
+          revokedAt: null,
+          encryptionPublicJwk: { $ne: null }
         }).lean();
 
         if (!deviceKey) {
           socket.emit("message:error", {
-            error: "This device signing key is not registered",
-            code: "SIGNING_KEY_NOT_REGISTERED"
+            error: "This device cryptographic identity is not registered",
+            code: "DEVICE_KEY_NOT_REGISTERED"
           });
           return;
         }
@@ -177,7 +189,6 @@ export function initSocket(httpServer, corsOrigin) {
           return;
         }
 
-        // Lazy import to avoid cycle
         const { default: Message } = await import("./models/Message.js");
 
         const replay = await Message.findOne({
@@ -196,7 +207,11 @@ export function initSocket(httpServer, corsOrigin) {
         const saved = await Message.create({
           room,
           from: userId,
-          body,
+          body: null,
+          encryptionVersion: 1,
+          ciphertext: signedPayload.ciphertext,
+          iv: signedPayload.iv,
+          keyEnvelopes: signedPayload.keyEnvelopes,
           deviceId: signedPayload.deviceId,
           clientMessageId: signedPayload.clientMessageId,
           signedAt: new Date(signedPayload.signedAt),
@@ -208,7 +223,15 @@ export function initSocket(httpServer, corsOrigin) {
           _id: saved._id,
           room,
           from: userId,
-          body,
+          encryptionVersion: 1,
+          ciphertext: saved.ciphertext,
+          iv: saved.iv,
+          keyEnvelopes: saved.keyEnvelopes.map(envelope => ({
+            userId: envelope.userId,
+            deviceId: envelope.deviceId,
+            wrapIv: envelope.wrapIv,
+            wrappedKey: envelope.wrappedKey
+          })),
           deviceId: saved.deviceId,
           clientMessageId: saved.clientMessageId,
           signedAt: saved.signedAt,
@@ -217,17 +240,21 @@ export function initSocket(httpServer, corsOrigin) {
           createdAt: saved.createdAt
         });
       } catch (err) {
-        console.error("Failed to save signed chat message:", err);
+        console.error("Failed to save encrypted chat message:", err);
         socket.emit("message:error", { error: "Message could not be sent" });
       }
     });
 
     socket.on("disconnect", async () => {
       const count = (onlineUsers.get(userId) || 1) - 1;
+
       if (count <= 0) {
         onlineUsers.delete(userId);
-        // Update DB
-        await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: new Date() }).catch(() => {});
+        await User.findByIdAndUpdate(
+          userId,
+          { isOnline: false, lastSeen: new Date() }
+        ).catch(() => {});
+
         io.emit("presence:update", { userId, isOnline: false });
       } else {
         onlineUsers.set(userId, count);
