@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import User from "./models/User.js";
+import { findGroupBySlug, verifyGroupAccess } from "./services/groups.js";
 
 export const MAX_ROOM_LENGTH = 50;
 export const MAX_MESSAGE_LENGTH = 2000;
@@ -75,14 +76,35 @@ export function initSocket(httpServer, corsOrigin) {
     // Rooms will be joined by client via "room:join".
     // Validation here prevents a custom Socket.IO client from bypassing UI checks.
     socket.on("room:join", async (requestedRoom) => {
-      const room = normalizeRoomName(requestedRoom);
+      const request =
+        typeof requestedRoom === "string"
+          ? { room: requestedRoom, password: "" }
+          : (requestedRoom || {});
+
+      const room = normalizeRoomName(request.room);
       if (!room) {
-        socket.emit("room:error", { error: "Invalid room name" });
+        socket.emit("room:error", { error: "Invalid group name", code: "INVALID_GROUP" });
         return;
       }
 
-      await socket.join(room);
-      socket.emit("room:joined", room);
+      const group = await findGroupBySlug(room, true);
+      if (!group) {
+        socket.emit("room:error", { error: "Group does not exist", code: "GROUP_NOT_FOUND", room });
+        return;
+      }
+
+      const allowed = await verifyGroupAccess(group, request.password);
+      if (!allowed) {
+        socket.emit("room:error", {
+          error: "Incorrect password for this private group",
+          code: "PRIVATE_GROUP_PASSWORD",
+          room
+        });
+        return;
+      }
+
+      await socket.join(group.slug);
+      socket.emit("room:joined", group.slug);
     });
 
     socket.on("message:send", async (payload = {}) => {
