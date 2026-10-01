@@ -3556,7 +3556,9 @@
       updateAuthUi();
       showAuthScreen();
 
-      const searchParams = new URLSearchParams(window.location?.search || "");
+      const searchParams = typeof URLSearchParams !== "undefined"
+        ? new URLSearchParams(window.location?.search || "")
+        : { get:() => "" };
       const resetToken = searchParams.get("resetToken") || "";
       const resetEmail = searchParams.get("resetEmail") || "";
 
