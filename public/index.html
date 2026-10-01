@@ -922,6 +922,151 @@
       .message-row{max-width:90%}
     }
 
+
+    .forgot-link{
+      margin-top:10px;
+      padding:0;
+      background:transparent;
+      color:var(--purple);
+      font-size:11px;
+      font-weight:850;
+      text-decoration:none;
+    }
+    .forgot-link:hover{text-decoration:underline}
+
+    .password-modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      z-index:60;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(14,10,24,.48);
+      backdrop-filter:blur(7px);
+    }
+    .password-modal.show{display:flex}
+    .password-modal-card{
+      width:min(440px,100%);
+      padding:22px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:#fff;
+      box-shadow:0 30px 80px rgba(20,12,34,.28);
+    }
+    .password-modal-icon{
+      width:46px;
+      height:46px;
+      display:grid;
+      place-items:center;
+      border-radius:14px;
+      background:#f1ebff;
+      color:#7128df;
+      font-size:19px;
+      font-weight:900;
+    }
+    .password-modal-title{
+      margin-top:14px;
+      font-size:18px;
+      font-weight:900;
+    }
+    .password-modal-copy{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.55;
+    }
+    .password-modal-card input{
+      width:100%;
+      margin-top:12px;
+      padding:11px 12px;
+      border:1px solid var(--line);
+      border-radius:11px;
+      background:#fafafd;
+      color:var(--ink);
+      outline:none;
+      font-size:12px;
+    }
+    .password-modal-card input:focus{
+      border-color:#b991ff;
+      box-shadow:0 0 0 3px rgba(124,45,244,.10);
+    }
+    .password-modal-card input[readonly]{
+      opacity:.74;
+      cursor:not-allowed;
+    }
+    .password-modal-message{
+      min-height:18px;
+      margin-top:9px;
+      font-size:10px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+    .password-modal-message.error{color:#bd4054}
+    .password-modal-message.success{color:#198554}
+    .password-modal-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      margin-top:12px;
+    }
+    .password-modal-actions button{
+      min-height:40px;
+      padding:9px 13px;
+      border-radius:10px;
+      font-size:10px;
+      font-weight:900;
+    }
+    .password-modal-cancel{
+      background:#f2f3f6;
+      color:#5f6572;
+    }
+    .password-modal-submit{
+      background:linear-gradient(135deg,#8b3df7,#7325e9);
+      color:#fff;
+      box-shadow:0 7px 18px rgba(124,45,244,.17);
+    }
+
+    body.dark-mode .password-modal-card{
+      background:#171822;
+      border-color:#30323f;
+      box-shadow:0 30px 80px rgba(0,0,0,.48);
+    }
+    body.dark-mode .password-modal-icon{
+      background:#2b2042;
+      color:#c4a2ff;
+    }
+    body.dark-mode .password-modal-card input{
+      background:#11121a;
+      border-color:#303240;
+      color:#ececf3;
+    }
+    body.dark-mode .password-modal-cancel{
+      background:#242631;
+      color:#c6c8d2;
+    }
+
+    @media (max-width:760px){
+      .password-modal{
+        align-items:flex-end;
+        padding:0;
+      }
+      .password-modal-card{
+        width:100%;
+        max-width:none;
+        padding:20px 16px max(20px,env(safe-area-inset-bottom));
+        border-radius:22px 22px 0 0;
+      }
+      .password-modal-card input{
+        min-height:46px;
+        font-size:16px;
+      }
+      .password-modal-actions button{
+        min-height:44px;
+        padding-inline:16px;
+      }
+    }
+
     /* Responsive polish: desktop, tablet and mobile */
     @media (min-width:1400px){
       .page-shell{width:min(1680px,95vw)}
@@ -1345,6 +1490,7 @@
               <input id="lPass" class="field" type="password" placeholder="Password" autocomplete="current-password" />
               <button id="btnLogin" class="primary-btn">Login</button>
             </div>
+            <button id="btnForgotPassword" class="forgot-link" type="button">Forgot password?</button>
           </div>
 
           <div class="auth-box">
@@ -1360,6 +1506,36 @@
         </div>
         </div>
       </section>
+
+      <div id="forgotPasswordModal" class="password-modal" role="dialog" aria-modal="true" aria-labelledby="forgotPasswordTitle">
+        <div class="password-modal-card">
+          <div class="password-modal-icon">?</div>
+          <div id="forgotPasswordTitle" class="password-modal-title">Forgot your password?</div>
+          <div class="password-modal-copy">Enter your Adda Box email. If an account exists, we’ll email you a one-time reset link that expires in 15 minutes.</div>
+          <input id="forgotPasswordEmail" type="email" placeholder="Email address" autocomplete="email" />
+          <div id="forgotPasswordMessage" class="password-modal-message"></div>
+          <div class="password-modal-actions">
+            <button id="btnCancelForgotPassword" class="password-modal-cancel" type="button">Cancel</button>
+            <button id="btnSendResetLink" class="password-modal-submit" type="button">Send reset link</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="resetPasswordModal" class="password-modal" role="dialog" aria-modal="true" aria-labelledby="resetPasswordTitle">
+        <div class="password-modal-card">
+          <div class="password-modal-icon">↻</div>
+          <div id="resetPasswordTitle" class="password-modal-title">Choose a new password</div>
+          <div class="password-modal-copy">Use 8+ characters with uppercase, lowercase, a number and a symbol.</div>
+          <input id="resetPasswordEmail" type="email" placeholder="Email address" readonly />
+          <input id="resetPasswordNew" type="password" placeholder="New password" autocomplete="new-password" />
+          <input id="resetPasswordConfirm" type="password" placeholder="Confirm new password" autocomplete="new-password" />
+          <div id="resetPasswordMessage" class="password-modal-message"></div>
+          <div class="password-modal-actions">
+            <button id="btnCancelResetPassword" class="password-modal-cancel" type="button">Cancel</button>
+            <button id="btnResetPassword" class="password-modal-submit" type="button">Reset password</button>
+          </div>
+        </div>
+      </div>
 
       <section id="groupsScreen" class="groups-screen flow-screen">
         <div class="groups-inner">
@@ -2780,6 +2956,165 @@
       }
     };
 
+
+    let resetTokenFromLink = "";
+    let resetEmailFromLink = "";
+
+    function setPasswordModalMessage(id,message,type=""){
+      const el = $(id);
+      if(!el) return;
+      el.textContent = message || "";
+      el.className = "password-modal-message" + (type ? " " + type : "");
+    }
+
+    function openForgotPassword(){
+      if($("forgotPasswordEmail")){
+        $("forgotPasswordEmail").value = $("lEmail")?.value || "";
+      }
+      setPasswordModalMessage("forgotPasswordMessage","");
+      $("forgotPasswordModal")?.classList?.add("show");
+      setTimeout(() => $("forgotPasswordEmail")?.focus?.(),0);
+    }
+
+    function closeForgotPassword(){
+      $("forgotPasswordModal")?.classList?.remove("show");
+      setPasswordModalMessage("forgotPasswordMessage","");
+    }
+
+    function openResetPassword(token,email){
+      resetTokenFromLink = token || "";
+      resetEmailFromLink = email || "";
+      if($("resetPasswordEmail")) $("resetPasswordEmail").value = resetEmailFromLink;
+      if($("resetPasswordNew")) $("resetPasswordNew").value = "";
+      if($("resetPasswordConfirm")) $("resetPasswordConfirm").value = "";
+      setPasswordModalMessage("resetPasswordMessage","");
+      $("resetPasswordModal")?.classList?.add("show");
+      setTimeout(() => $("resetPasswordNew")?.focus?.(),0);
+    }
+
+    function closeResetPassword(clearUrl=false){
+      $("resetPasswordModal")?.classList?.remove("show");
+      setPasswordModalMessage("resetPasswordMessage","");
+      resetTokenFromLink = "";
+      resetEmailFromLink = "";
+
+      if(clearUrl && window.history?.replaceState){
+        window.history.replaceState({},document.title,window.location?.pathname || "/");
+      }
+    }
+
+    async function requestPasswordReset(){
+      const email = ($("forgotPasswordEmail")?.value || "").trim();
+      if(!email){
+        setPasswordModalMessage("forgotPasswordMessage","Enter your email address.","error");
+        return;
+      }
+
+      const button = $("btnSendResetLink");
+      if(button) button.disabled = true;
+      setPasswordModalMessage("forgotPasswordMessage","Sending reset link…");
+
+      try{
+        const res = await fetch("/api/auth/forgot-password",{
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify({ email })
+        });
+        const data = await res.json();
+
+        if(!res.ok){
+          const validation = data.errors?.[0]?.msg;
+          setPasswordModalMessage(
+            "forgotPasswordMessage",
+            validation || data.error || "Could not send reset link.",
+            "error"
+          );
+          return;
+        }
+
+        setPasswordModalMessage(
+          "forgotPasswordMessage",
+          data.message || "If an account exists for that email, a reset link has been sent.",
+          "success"
+        );
+      }catch(e){
+        setPasswordModalMessage("forgotPasswordMessage","Could not contact Adda Box. Please try again.","error");
+      }finally{
+        if(button) button.disabled = false;
+      }
+    }
+
+    async function submitPasswordReset(){
+      const password = $("resetPasswordNew")?.value || "";
+      const confirm = $("resetPasswordConfirm")?.value || "";
+
+      if(!resetTokenFromLink || !resetEmailFromLink){
+        setPasswordModalMessage("resetPasswordMessage","This reset link is incomplete.","error");
+        return;
+      }
+
+      if(!strongPw(password)){
+        setPasswordModalMessage(
+          "resetPasswordMessage",
+          "Password must use 8+ characters with uppercase, lowercase, a number and a symbol.",
+          "error"
+        );
+        return;
+      }
+
+      if(password !== confirm){
+        setPasswordModalMessage("resetPasswordMessage","The two passwords do not match.","error");
+        return;
+      }
+
+      const button = $("btnResetPassword");
+      if(button) button.disabled = true;
+      setPasswordModalMessage("resetPasswordMessage","Updating password…");
+
+      try{
+        const res = await fetch("/api/auth/reset-password",{
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify({
+            email:resetEmailFromLink,
+            token:resetTokenFromLink,
+            password
+          })
+        });
+
+        const data = await res.json();
+
+        if(!res.ok){
+          const validation = data.errors?.[0]?.msg;
+          setPasswordModalMessage(
+            "resetPasswordMessage",
+            validation || data.error || "Could not reset password.",
+            "error"
+          );
+          return;
+        }
+
+        if($("lEmail")) $("lEmail").value = resetEmailFromLink;
+        setPasswordModalMessage(
+          "resetPasswordMessage",
+          data.message || "Password changed successfully.",
+          "success"
+        );
+
+        localStorage.removeItem("adda_token");
+
+        setTimeout(() => {
+          closeResetPassword(true);
+          showAuthScreen();
+          if($("lPass")) $("lPass").focus?.();
+        },900);
+      }catch(e){
+        setPasswordModalMessage("resetPasswordMessage","Could not contact Adda Box. Please try again.","error");
+      }finally{
+        if(button) button.disabled = false;
+      }
+    }
+
     $("btnLogin").onclick = async () => {
       try{
         const res = await fetch("/api/auth/login", {
@@ -2806,6 +3141,25 @@
         log("Login error: " + e.message);
       }
     };
+
+    $("btnForgotPassword")?.addEventListener?.("click",openForgotPassword);
+    $("btnCancelForgotPassword")?.addEventListener?.("click",closeForgotPassword);
+    $("btnSendResetLink")?.addEventListener?.("click",requestPasswordReset);
+    $("forgotPasswordEmail")?.addEventListener?.("keydown",e => {
+      if(e.key === "Enter"){
+        e.preventDefault();
+        requestPasswordReset();
+      }
+    });
+
+    $("btnCancelResetPassword")?.addEventListener?.("click",() => closeResetPassword(true));
+    $("btnResetPassword")?.addEventListener?.("click",submitPasswordReset);
+    $("resetPasswordConfirm")?.addEventListener?.("keydown",e => {
+      if(e.key === "Enter"){
+        e.preventDefault();
+        submitPasswordReset();
+      }
+    });
 
     $("btnTheme").onclick = toggleTheme;
     $("btnLogout").onclick = () => hardLogout("Logged out by user.");
@@ -3201,6 +3555,14 @@
     window.addEventListener("DOMContentLoaded", async () => {
       updateAuthUi();
       showAuthScreen();
+
+      const searchParams = new URLSearchParams(window.location?.search || "");
+      const resetToken = searchParams.get("resetToken") || "";
+      const resetEmail = searchParams.get("resetEmail") || "";
+
+      if(resetToken && resetEmail){
+        openResetPassword(resetToken,resetEmail);
+      }
 
       const savedRoom = localStorage.getItem("adda_room") || "general";
       setActiveRoom(savedRoom);
