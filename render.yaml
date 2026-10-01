@@ -14,3 +14,9 @@ services:
         generateValue: true
       - key: CORS_ORIGIN
         value: https://adda-box-chat-app.onrender.com
+      - key: PASSWORD_RESET_BASE_URL
+        value: https://adda-box-chat-app.onrender.com
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESET_EMAIL_FROM
+        sync: false
