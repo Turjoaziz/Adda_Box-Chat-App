@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <title>Adda Box Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <style>
     :root{
       --ink:#171827;
@@ -921,6 +921,371 @@
       .field-row .primary-btn{width:100%}
       .message-row{max-width:90%}
     }
+
+    /* Responsive polish: desktop, tablet and mobile */
+    @media (min-width:1400px){
+      .page-shell{width:min(1680px,95vw)}
+      #workspace.flow-screen.active{grid-template-columns:minmax(0,1fr) 280px}
+      .chat-head{padding-inline:26px}
+      .log{padding-inline:30px}
+      .message-row{max-width:70%}
+      .groups-inner{width:min(1160px,100%)}
+      .groups-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
+
+    @media (min-width:1101px) and (max-width:1399px){
+      #workspace.flow-screen.active{grid-template-columns:minmax(0,1fr) 240px}
+      .message-row{max-width:78%}
+    }
+
+    @media (max-width:1100px){
+      #workspace.flow-screen.active{
+        grid-template-columns:minmax(0,1fr);
+      }
+      #workspace .sidebar-right{display:none}
+      .page-shell{width:min(1320px,96vw)}
+      .groups-inner{width:min(920px,100%)}
+      .auth-stage{width:min(760px,100%)}
+    }
+
+    @media (max-width:900px){
+      .topbar{
+        gap:10px;
+        padding-inline:16px;
+      }
+      .brand-sub{display:none}
+      .profile-copy{display:none}
+      .profile-chip{padding:5px}
+      .status-pill{
+        max-width:150px;
+        overflow:hidden;
+      }
+      #connectionStatus{
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+      }
+      .security-pill{padding:7px 9px}
+      .groups-screen{padding:26px 20px}
+      .groups-grid{grid-template-columns:1fr 1fr}
+      .create-group-form{grid-template-columns:1fr 1fr}
+      .create-group-form button{width:100%}
+      .message-row{max-width:84%}
+    }
+
+    @media (max-width:760px){
+      html,body{
+        width:100%;
+        min-height:100%;
+      }
+      body{
+        min-height:100dvh;
+        background-attachment:fixed;
+      }
+      body::before{opacity:.14}
+
+      .page-shell{
+        width:100%;
+        margin:0;
+      }
+      .app-card{
+        min-height:100dvh;
+        border-radius:0;
+        border-left:0;
+        border-right:0;
+        box-shadow:none;
+      }
+
+      .topbar{
+        position:sticky;
+        top:0;
+        z-index:30;
+        min-height:60px;
+        padding:
+          max(8px,env(safe-area-inset-top))
+          10px
+          8px;
+        background:rgba(255,255,255,.96);
+        backdrop-filter:blur(18px);
+      }
+      body.dark-mode .topbar{background:rgba(17,18,28,.97)}
+
+      .brand-mark{
+        width:38px;
+        height:38px;
+        border-radius:12px;
+        font-size:16px;
+      }
+      .brand-title{font-size:16px}
+      .brand-wrap{gap:9px}
+
+      .top-actions{
+        gap:5px;
+        min-width:0;
+      }
+      .profile-chip{display:none!important}
+      .ghost-btn{
+        min-width:40px;
+        min-height:40px;
+        padding:8px 9px;
+        font-size:0;
+      }
+      .ghost-btn::after{
+        content:"↪";
+        font-size:16px;
+      }
+      .theme-toggle{
+        min-width:40px;
+        min-height:40px;
+        padding:8px;
+      }
+      #themeLabel{display:none}
+
+      .status-pill{
+        min-width:38px;
+        max-width:38px;
+        height:38px;
+        padding:0;
+        justify-content:center;
+      }
+      #connectionStatus{display:none}
+      .status-dot{
+        width:9px;
+        height:9px;
+      }
+
+      .security-pill{
+        min-width:38px;
+        max-width:38px;
+        height:38px;
+        padding:0;
+        justify-content:center;
+        overflow:hidden;
+      }
+      #securityLabel{display:none}
+
+      #authPanel.flow-screen{
+        min-height:calc(100dvh - 60px);
+        padding:18px 12px max(24px,env(safe-area-inset-bottom));
+      }
+      .auth-stage{
+        width:100%;
+        padding:20px 14px;
+        border-radius:20px;
+      }
+      .auth-stage-head{margin-bottom:18px}
+      .auth-stage-logo{
+        width:52px;
+        height:52px;
+        border-radius:16px;
+      }
+      .auth-stage-title{font-size:21px}
+      .auth-grid{grid-template-columns:1fr}
+      .auth-box{padding:13px}
+      .field-row{
+        flex-direction:column;
+        align-items:stretch;
+      }
+      .field,
+      .primary-btn{
+        min-height:46px;
+        font-size:16px;
+      }
+      .field-row .primary-btn{width:100%}
+
+      .groups-screen{
+        min-height:calc(100dvh - 60px);
+        padding:20px 12px max(28px,env(safe-area-inset-bottom));
+      }
+      .groups-hero{
+        margin-bottom:18px;
+        align-items:flex-start;
+      }
+      .groups-title{font-size:23px}
+      .groups-sub{font-size:11px}
+      .groups-grid{grid-template-columns:1fr}
+      .group-card{
+        min-height:132px;
+        padding:17px;
+        border-radius:17px;
+      }
+      .group-card-title{margin-top:13px}
+      .group-card-copy{font-size:10px}
+      .create-group-panel{
+        padding:15px;
+        border-radius:17px;
+      }
+      .create-group-form{grid-template-columns:1fr}
+      .create-group-form input,
+      .create-group-form select,
+      .create-group-form button{
+        min-height:46px;
+        font-size:16px;
+      }
+
+      .group-modal{
+        align-items:flex-end;
+        padding:0;
+      }
+      .group-modal-card{
+        width:100%;
+        max-width:none;
+        padding:20px 16px max(20px,env(safe-area-inset-bottom));
+        border-radius:22px 22px 0 0;
+      }
+      .group-modal-card input{
+        min-height:46px;
+        font-size:16px;
+      }
+      .group-modal-actions button{
+        min-height:44px;
+        padding-inline:16px;
+      }
+
+      #workspace.flow-screen.active{
+        display:grid;
+        grid-template-columns:1fr;
+        height:calc(100dvh - 60px);
+        min-height:0;
+      }
+      #workspace .sidebar-left,
+      #workspace .sidebar-right{
+        display:none;
+      }
+
+      .chat{
+        min-height:0;
+        height:100%;
+      }
+      .chat-head{
+        min-height:62px;
+        padding:8px 10px;
+        gap:8px;
+      }
+      .chat-head-left{gap:8px}
+      .back-groups-btn{
+        width:40px;
+        height:40px;
+        border-radius:12px;
+      }
+      .chat-room{
+        max-width:42vw;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        font-size:15px;
+      }
+      .chat-room-sub{
+        max-width:48vw;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        font-size:9px;
+      }
+      .history-btn{
+        min-height:40px;
+        padding:8px 10px;
+        white-space:nowrap;
+      }
+
+      .notice-bar{
+        margin:8px 10px 0;
+        font-size:10px;
+      }
+      .log{
+        flex:1;
+        min-height:0;
+        padding:14px 10px 12px;
+        overscroll-behavior:contain;
+        -webkit-overflow-scrolling:touch;
+      }
+      .message-row{max-width:92%}
+      .avatar{
+        width:28px;
+        height:28px;
+      }
+      .bubble{
+        padding:10px 12px;
+        font-size:14px;
+        line-height:1.45;
+      }
+      .sender-line{
+        flex-wrap:wrap;
+        gap:4px 6px;
+      }
+      .signature-badge{
+        font-size:7px;
+        padding:2px 5px;
+      }
+
+      .composer-wrap{
+        position:sticky;
+        bottom:0;
+        z-index:20;
+        padding:
+          9px
+          10px
+          max(10px,env(safe-area-inset-bottom));
+        background:rgba(255,255,255,.98);
+      }
+      body.dark-mode .composer-wrap{background:rgba(15,16,24,.98)}
+      .composer{
+        min-height:52px;
+        padding:6px 6px 6px 11px;
+        border-radius:16px;
+      }
+      .composer input{
+        font-size:16px;
+        padding:9px 2px;
+      }
+      .send-btn{
+        width:44px;
+        height:44px;
+        flex:0 0 auto;
+      }
+    }
+
+    @media (max-width:430px){
+      .brand-title{font-size:15px}
+      .brand-mark{
+        width:36px;
+        height:36px;
+      }
+      .topbar{padding-inline:8px}
+      .top-actions{gap:4px}
+      .theme-toggle,
+      .status-pill,
+      .security-pill{
+        min-width:36px;
+        max-width:36px;
+        height:36px;
+      }
+      .ghost-btn{
+        min-width:36px;
+        min-height:36px;
+      }
+      .groups-title{font-size:21px}
+      .group-card{min-height:122px}
+      .chat-room{max-width:36vw}
+      .chat-room-sub{display:none}
+      .history-btn{
+        font-size:0;
+        min-width:40px;
+        padding:8px;
+      }
+      .history-btn::after{
+        content:"↻";
+        font-size:17px;
+      }
+      .message-row{max-width:94%}
+      .bubble{font-size:13px}
+    }
+
+    @media (hover:none){
+      button:hover{transform:none}
+      .group-card:hover{transform:none}
+    }
+
   </style>
 </head>
 <body>
