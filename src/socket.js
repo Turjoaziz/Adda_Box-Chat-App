@@ -53,13 +53,26 @@ function presenceList() {
 export function initSocket(httpServer, corsOrigin) {
   const io = new Server(httpServer, { cors: { origin: corsOrigin, credentials: true } });
 
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token || socket.handshake.query?.token;
     if (!token) return next(new Error("No token"));
 
     try {
       const payload = jwt.verify(token, process.env.JWT_SECRET);
-      socket.user = { id: payload.id, email: payload.email };
+      const user = await User.findById(payload.id).select("email passwordChangedAt");
+
+      if (!user) return next(new Error("Invalid token"));
+
+      if (user.passwordChangedAt) {
+        const issuedAtMs = Number(payload.iat || 0) * 1000;
+        const changedAtMs = user.passwordChangedAt.getTime();
+
+        if (!payload.iat || issuedAtMs + 1000 < changedAtMs) {
+          return next(new Error("Invalid token"));
+        }
+      }
+
+      socket.user = { id: String(user._id), email: user.email };
       next();
     } catch {
       next(new Error("Invalid token"));
