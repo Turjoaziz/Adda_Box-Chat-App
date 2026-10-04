@@ -1,6 +1,6 @@
 # Adda_Box Chat App
 
-A real-time chat application built with Node.js, Express, MongoDB, and Socket.IO. Users can register, sign in, join named rooms, exchange messages, and see who is online.
+A real-time group chat application built with Node.js, Express, MongoDB, and Socket.IO. Adda Box supports public and password-protected private groups, end-to-end encrypted new messages, device signatures, responsive light/dark interfaces, presence, and password recovery.
 
 ## Demo and screenshot
 
@@ -8,20 +8,28 @@ A real-time chat application built with Node.js, Express, MongoDB, and Socket.IO
 
 ![Adda_Box chat interface](website%20screenshot.png)
 
-The deployment may need time to start if the hosting service has put it to sleep. Its current availability has not been verified for this documentation update.
+The Render service may need a short cold-start delay on the free tier.
 
 **Hosting requirement:** this application needs a running Node.js server and MongoDB. GitHub Pages cannot run this backend. The frontend calls `/api/...` and `/socket.io/...` on the same host, so open the app through the Node.js server rather than opening `public/index.html` directly.
 
 ## Features
 
-- Registration with email validation and password rules.
-- Login using JWTs that expire after seven days; localStorage saves the token to restore sessions.
-- Named chat rooms, with `general` prefilled in the interface.
-- Real-time messages through Socket.IO and message storage in MongoDB.
-- A **Load Last 50** button for a room's recent message history.
-- Online presence tracking, including multiple connections for the same user.
-- Automatic rejoining of confirmed rooms after a temporary connection loss, with connection status and offline draft protection.
-- A frontend styled with Tailwind CSS loaded from a CDN.
+- Registration and login with JWT authentication and bcrypt password hashing.
+- Three-step interface: **Login / Sign Up → Groups → Chat**.
+- Public groups that any authenticated user can enter.
+- Password-protected private groups with server-side access checks for both live chat and saved history.
+- Server-side protection against duplicate and confusingly similar group names.
+- End-to-end encryption for **new messages** using browser-side AES-256-GCM encryption and per-device wrapped message keys.
+- Per-device ECDSA digital signatures so clients can verify message authenticity and detect tampering.
+- Legacy plaintext history remains readable for compatibility; newly encrypted messages are stored as ciphertext.
+- MongoDB message history with the latest 50 messages available per group.
+- Real-time messaging and online presence through Socket.IO.
+- Reconnection handling and automatic rejoin of previously confirmed groups.
+- Responsive layouts for desktop, tablet, and mobile.
+- Light and dark themes with the preference saved locally.
+- Forgot-password flow with one-time reset tokens that expire after 15 minutes.
+- Gmail SMTP password-reset delivery via Nodemailer, with optional Resend fallback.
+- Automated Node.js tests for environment validation, reconnect behavior, room validation, group-name collisions, cryptographic signatures, encrypted payload tampering, and reset-email configuration.
 
 ## Run locally
 
@@ -69,6 +77,12 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 | `JWT_SECRET` | Required secret used to sign and verify login tokens | Replace the example placeholder with a generated secret |
 | `PORT` | HTTP server port; defaults to `4000` | `4000` |
 | `CORS_ORIGIN` | Allowed browser origin | `http://localhost:4000` |
+| `PASSWORD_RESET_BASE_URL` | Public URL placed in password-reset links | `http://localhost:4000` locally |
+| `SMTP_USER` | Gmail account used for password-reset email | Your Gmail address |
+| `SMTP_PASS` | Google App Password for Gmail SMTP | A Google App Password, not the normal account password |
+| `SMTP_FROM` | Optional display sender for SMTP | e.g. `Adda Box <your-address@gmail.com>` |
+| `RESEND_API_KEY` | Optional fallback email provider | Leave empty when Gmail SMTP is used |
+| `RESET_EMAIL_FROM` | Resend fallback sender | Required only when using Resend |
 
 Keep `.env` private; `.gitignore` already excludes it. `.env.example` contains only sample values. If you change the port, update the origin and browser URL too. Changing `JWT_SECRET` invalidates existing login tokens.
 
@@ -92,17 +106,17 @@ npm start
 
 ## Try a conversation
 
-1. Register with a name of at least two characters and a valid email. Passwords need at least eight characters, including lowercase, uppercase, a number, and a special character.
-2. Open another browser or a private window and register a second user. Separate browser storage avoids sharing the same saved token.
-3. In both windows, enter the same room name and click **Join Room**.
-4. Send a message and check that it appears in both windows.
-5. Click **Load Last 50** to retrieve stored messages for that room.
-6. After a temporary connection loss, previously confirmed rooms are rejoined automatically when the socket reconnects. Wait for the new **Joined room** confirmation before sending. If you try to send while offline, your draft remains in the message box.
-7. After a full page refresh or a new login, click **Join Room** again. Room membership is remembered only in the current page session; drafts are not saved across refreshes.
+1. Register with a valid email and a password that satisfies the displayed password rules.
+2. After authentication, choose a **public group** or create a new group.
+3. To test a private group, create one with a password and open it from another account.
+4. Open another browser/private window and sign in as a second user.
+5. Join the same group from both accounts.
+6. Send new messages and confirm that they appear with **Encrypted 🔒** and **Signed ✓** indicators.
+7. Use **Load last 50** to retrieve stored history.
+8. Temporarily disconnect and reconnect the network to confirm that the socket reconnects and previously confirmed groups rejoin.
+9. Use **Forgot password?** from the login screen to test the reset-email flow after SMTP is configured.
 
-Only confirmed room joins are restored. Missed messages are not automatically replayed: use **Load Last 50** to retrieve recent stored history. This update does not guarantee delivery of messages already in flight when a connection drops.
-
-Rooms currently group conversations; they do not have private membership or invitation controls.
+New encrypted messages can only be decrypted by devices that received the corresponding encrypted message key. A newly registered device cannot automatically decrypt earlier encrypted messages unless a future key-backup/history-sharing mechanism is added.
 
 ## Project layout
 
@@ -113,22 +127,30 @@ Rooms currently group conversations; they do not have private membership or invi
 | `src/config/db.js` | MongoDB connection |
 | `src/config/env.js` | Startup checks for required configuration and port settings |
 | `src/middleware/auth.js` | JWT verification for protected HTTP endpoints |
-| `src/models/` | User and message schemas |
-| `src/routes/` | Authentication, message history, and user lookup endpoints |
-| `src/socket.js` | Socket authentication, room joins, live messaging, and presence |
+| `src/models/` | User, message, group, group-membership, and per-device cryptographic key schemas |
+| `src/routes/` | Authentication, groups, device keys, encrypted history, and user lookup endpoints |
+| `src/services/` | Group validation, cryptographic verification, and password-reset email delivery |
+| `src/socket.js` | Socket authentication, group joins, encrypted message validation, signatures, and presence |
 | `.env.example` | Sample local environment configuration |
 
 ## HTTP endpoints
 
 | Method | Path | Purpose | Authentication |
 | --- | --- | --- | --- |
-| GET | `/healthz` | Returns `{"ok":true}` when the HTTP server responds | None |
-| POST | `/api/auth/register` | Register with `name`, `email`, and `password` | None |
-| POST | `/api/auth/login` | Sign in with `email` and `password` | None |
-| GET | `/api/messages/:room` | Retrieve the latest 50 messages, oldest first within that batch | Bearer token |
-| POST | `/api/users/lookup` | Look up users using an `ids` array | Bearer token |
+| GET | `/healthz` | Basic HTTP health response | None |
+| POST | `/api/auth/register` | Register an account | None |
+| POST | `/api/auth/login` | Sign in | None |
+| POST | `/api/auth/forgot-password` | Request a one-time password reset link | None |
+| POST | `/api/auth/reset-password` | Set a new password using a valid reset token | None |
+| GET | `/api/groups` | List public and private groups | Bearer token |
+| POST | `/api/groups` | Create a public or private group | Bearer token |
+| GET | `/api/groups/:slug/recipients` | Retrieve encryption-ready device public keys for group members | Bearer token; private-group password when required |
+| GET | `/api/messages/:room` | Retrieve the latest 50 saved messages | Bearer token; private-group password when required |
+| POST | `/api/keys/register` | Register the current device signing/encryption public keys | Bearer token |
+| GET | `/api/keys/:userId/:deviceId` | Retrieve a device public-key bundle | Bearer token |
+| POST | `/api/users/lookup` | Resolve user IDs to display names | Bearer token |
 
-Protected requests use `Authorization: Bearer <token>`. The health endpoint checks the HTTP response; it does not recheck the database on each request.
+Protected requests use `Authorization: Bearer <token>`. Private group history and key-recipient requests also require the private-group password.
 
 ## Deployment configuration
 
@@ -137,7 +159,8 @@ For a Node.js hosting service such as Render:
 - Install command: `npm ci`.
 - Start command: `npm start`.
 - Configure `MONGO_URI` and `JWT_SECRET` in the hosting service's environment settings.
-- Set `CORS_ORIGIN` to the public app origin, such as `https://adda-box-chat-app.onrender.com`, without a trailing slash.
+- Set `CORS_ORIGIN` and `PASSWORD_RESET_BASE_URL` to the public app origin, such as `https://adda-box-chat-app.onrender.com`.
+- For free password-reset delivery, configure `SMTP_USER` and a Google `SMTP_PASS` App Password. Resend can remain as an optional fallback.
 - Allow the hosting service to supply `PORT` where supported.
 - Configure Atlas network access for the deployed server.
 
@@ -155,15 +178,23 @@ For a Node.js hosting service such as Render:
 
 ## Security and development notes
 
-Passwords are hashed with bcrypt, and protected HTTP routes and socket connections verify JWTs. Tokens are stored in localStorage, and room access is not restricted by membership. Review these choices before handling sensitive conversations.
+Passwords are hashed with bcrypt. JWTs protect authenticated HTTP and Socket.IO access. New messages are encrypted in the browser before they are sent to the server, and the server stores ciphertext plus wrapped message keys rather than plaintext for those messages. New encrypted payloads are also digitally signed by the sending device and verified before storage.
 
-Run the configuration regression tests with:
+The current encryption design is **not a full Signal Protocol implementation** and does not yet provide Double Ratchet forward secrecy or safety-number verification. Treat it as a strong project-level E2EE implementation, not a claim of WhatsApp/Signal protocol equivalence.
+
+Device cryptographic private keys are stored in the browser's IndexedDB. Clearing browser storage can create a new device identity and can make earlier encrypted messages unavailable on that browser.
+
+Private-group passwords control entry to private groups; they are separate from the cryptographic keys used to encrypt chat messages.
+
+Password-reset links are single-use, expire after 15 minutes, and the server stores only a SHA-256 hash of the reset token. Gmail SMTP uses a Google App Password rather than the account's normal password.
+
+Run the regression tests with:
 
 ```bash
 npm test
 ```
 
-These tests use Node.js's built-in test runner and need no database or real credentials. They cover required settings, the sample secret, port validation, and safe error messages. The frontend tests execute the actual inline client script with simulated DOM and socket events to check room rejoining, offline drafts, and logout cleanup. They do not test a real browser, live authentication, or real network messaging; use the conversation steps above for a manual smoke check.
+The test suite uses Node.js's built-in test runner and does not require production credentials. It covers configuration validation, chat reconnection and validation, group-name collision rules, cryptographic signatures, encrypted-message tamper detection, signed encryption-key bindings, and password-reset email configuration.
 
 ## Improvement reports
 
