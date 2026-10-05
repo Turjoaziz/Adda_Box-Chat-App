@@ -51,6 +51,12 @@
     button{border:0;cursor:pointer;transition:.18s ease}
     button:active{transform:translateY(1px)}
 
+    /* Keep keyboard navigation visible on custom-styled controls. */
+    :where(button,input,select,a,[tabindex]):focus-visible{
+      outline:3px solid var(--purple);
+      outline-offset:3px;
+    }
+
     .page-shell{
       position:relative;
       z-index:1;
