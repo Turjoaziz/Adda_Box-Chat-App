@@ -1492,8 +1492,8 @@
           <div class="auth-box">
             <div class="auth-box-title">Login</div>
             <div class="field-row">
-              <input id="lEmail" class="field" placeholder="Email address" autocomplete="email" />
-              <input id="lPass" class="field" type="password" placeholder="Password" autocomplete="current-password" />
+              <input id="lEmail" class="field" placeholder="Email address" autocomplete="email" aria-label="Login email address" />
+              <input id="lPass" class="field" type="password" placeholder="Password" autocomplete="current-password" aria-label="Login password" />
               <button id="btnLogin" class="primary-btn">Login</button>
             </div>
             <button id="btnForgotPassword" class="forgot-link" type="button">Forgot password?</button>
@@ -1502,9 +1502,9 @@
           <div class="auth-box">
             <div class="auth-box-title">Create account</div>
             <div class="field-row">
-              <input id="rName" class="field" placeholder="Name" autocomplete="name" />
-              <input id="rEmail" class="field" placeholder="Email" autocomplete="email" />
-              <input id="rPass" class="field" type="password" placeholder="Password" autocomplete="new-password" />
+              <input id="rName" class="field" placeholder="Name" autocomplete="name" aria-label="Your name" />
+              <input id="rEmail" class="field" placeholder="Email" autocomplete="email" aria-label="Registration email address" />
+              <input id="rPass" class="field" type="password" placeholder="Password" autocomplete="new-password" aria-label="Create password" aria-describedby="pwHelp" />
               <button id="btnRegister" class="primary-btn">Register</button>
             </div>
             <p id="pwHelp" class="auth-help">Use 8+ characters with uppercase, lowercase, a number and a symbol.</p>
@@ -1518,7 +1518,7 @@
           <div class="password-modal-icon">?</div>
           <div id="forgotPasswordTitle" class="password-modal-title">Forgot your password?</div>
           <div class="password-modal-copy">Enter your Adda Box email. If an account exists, we’ll email you a one-time reset link that expires in 15 minutes.</div>
-          <input id="forgotPasswordEmail" type="email" placeholder="Email address" autocomplete="email" />
+          <input id="forgotPasswordEmail" type="email" placeholder="Email address" autocomplete="email" aria-label="Account email address" />
           <div id="forgotPasswordMessage" class="password-modal-message" role="status" aria-live="polite" aria-atomic="true"></div>
           <div class="password-modal-actions">
             <button id="btnCancelForgotPassword" class="password-modal-cancel" type="button">Cancel</button>
@@ -1532,9 +1532,9 @@
           <div class="password-modal-icon">↻</div>
           <div id="resetPasswordTitle" class="password-modal-title">Choose a new password</div>
           <div class="password-modal-copy">Use 8+ characters with uppercase, lowercase, a number and a symbol.</div>
-          <input id="resetPasswordEmail" type="email" placeholder="Email address" readonly />
-          <input id="resetPasswordNew" type="password" placeholder="New password" autocomplete="new-password" />
-          <input id="resetPasswordConfirm" type="password" placeholder="Confirm new password" autocomplete="new-password" />
+          <input id="resetPasswordEmail" type="email" placeholder="Email address" readonly aria-label="Account email address" />
+          <input id="resetPasswordNew" type="password" placeholder="New password" autocomplete="new-password" aria-label="New password" aria-describedby="resetPasswordTitle" />
+          <input id="resetPasswordConfirm" type="password" placeholder="Confirm new password" autocomplete="new-password" aria-label="Confirm new password" />
           <div id="resetPasswordMessage" class="password-modal-message" role="status" aria-live="polite" aria-atomic="true"></div>
           <div class="password-modal-actions">
             <button id="btnCancelResetPassword" class="password-modal-cancel" type="button">Cancel</button>
