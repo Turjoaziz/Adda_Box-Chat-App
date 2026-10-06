@@ -1519,7 +1519,7 @@
           <div id="forgotPasswordTitle" class="password-modal-title">Forgot your password?</div>
           <div class="password-modal-copy">Enter your Adda Box email. If an account exists, we’ll email you a one-time reset link that expires in 15 minutes.</div>
           <input id="forgotPasswordEmail" type="email" placeholder="Email address" autocomplete="email" />
-          <div id="forgotPasswordMessage" class="password-modal-message"></div>
+          <div id="forgotPasswordMessage" class="password-modal-message" role="status" aria-live="polite" aria-atomic="true"></div>
           <div class="password-modal-actions">
             <button id="btnCancelForgotPassword" class="password-modal-cancel" type="button">Cancel</button>
             <button id="btnSendResetLink" class="password-modal-submit" type="button">Send reset link</button>
@@ -1535,7 +1535,7 @@
           <input id="resetPasswordEmail" type="email" placeholder="Email address" readonly />
           <input id="resetPasswordNew" type="password" placeholder="New password" autocomplete="new-password" />
           <input id="resetPasswordConfirm" type="password" placeholder="Confirm new password" autocomplete="new-password" />
-          <div id="resetPasswordMessage" class="password-modal-message"></div>
+          <div id="resetPasswordMessage" class="password-modal-message" role="status" aria-live="polite" aria-atomic="true"></div>
           <div class="password-modal-actions">
             <button id="btnCancelResetPassword" class="password-modal-cancel" type="button">Cancel</button>
             <button id="btnResetPassword" class="password-modal-submit" type="button">Reset password</button>
