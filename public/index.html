@@ -2998,15 +2998,20 @@
       setTimeout(() => $("resetPasswordNew")?.focus?.(),0);
     }
 
+    function clearSensitiveResetUrl(){
+      if(!window.history?.replaceState) return;
+      const path = window.location?.pathname || "/";
+      const hash = window.location?.hash || "";
+      window.history.replaceState({},document.title,path + hash);
+    }
+
     function closeResetPassword(clearUrl=false){
       $("resetPasswordModal")?.classList?.remove("show");
       setPasswordModalMessage("resetPasswordMessage","");
       resetTokenFromLink = "";
       resetEmailFromLink = "";
 
-      if(clearUrl && window.history?.replaceState){
-        window.history.replaceState({},document.title,window.location?.pathname || "/");
-      }
+      if(clearUrl) clearSensitiveResetUrl();
     }
 
     async function requestPasswordReset(){
@@ -3570,6 +3575,9 @@
 
       if(resetToken && resetEmail){
         openResetPassword(resetToken,resetEmail);
+        // Keep the token/email in memory for this reset attempt, but remove
+        // them from the visible URL so they are not left in browser history.
+        clearSensitiveResetUrl();
       }
 
       const savedRoom = localStorage.getItem("adda_room") || "general";
