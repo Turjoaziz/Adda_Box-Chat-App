@@ -11,6 +11,7 @@ import messageRoutes from "./routes/messages.routes.js";
 import usersRoutes from "./routes/users.routes.js";
 import groupsRoutes from "./routes/groups.routes.js";
 import keyRoutes from "./routes/keys.routes.js";
+import { securityHeaders } from "./middleware/security-headers.js";
 import { initSocket } from "./socket.js";
 import { ensureDefaultGroups } from "./services/groups.js";
 
@@ -25,6 +26,10 @@ try {
 
 // 1) Create app
 const app = express();
+
+// Avoid advertising the framework and add lightweight browser hardening headers.
+app.disable("x-powered-by");
+app.use(securityHeaders);
 
 // 2) CORS (comma-separated origins in .env)
 const origins = (process.env.CORS_ORIGIN || "")
