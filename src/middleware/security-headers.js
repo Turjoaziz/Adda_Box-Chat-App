@@ -10,3 +10,12 @@ export function securityHeaders(req, res, next) {
   );
   next();
 }
+
+// API responses can contain JWTs, private group data, device public-key
+// metadata, password-reset responses, and chat history. Prevent browsers and
+// shared intermediaries from retaining those responses.
+export function noStore(req, res, next) {
+  res.setHeader("Cache-Control", "no-store, max-age=0");
+  res.setHeader("Pragma", "no-cache");
+  next();
+}

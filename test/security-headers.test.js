@@ -1,18 +1,25 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { securityHeaders } from "../src/middleware/security-headers.js";
+import { noStore, securityHeaders } from "../src/middleware/security-headers.js";
 
-test("security headers are applied and middleware continues", () => {
+function responseRecorder() {
   const headers = new Map();
-  let nextCalls = 0;
 
-  const res = {
-    setHeader(name, value) {
-      headers.set(name.toLowerCase(), value);
+  return {
+    headers,
+    response: {
+      setHeader(name, value) {
+        headers.set(name.toLowerCase(), value);
+      }
     }
   };
+}
 
-  securityHeaders({}, res, () => {
+test("security headers are applied and middleware continues", () => {
+  const { headers, response } = responseRecorder();
+  let nextCalls = 0;
+
+  securityHeaders({}, response, () => {
     nextCalls += 1;
   });
 
@@ -23,5 +30,18 @@ test("security headers are applied and middleware continues", () => {
     headers.get("permissions-policy"),
     "camera=(), microphone=(), geolocation=()"
   );
+  assert.equal(nextCalls, 1);
+});
+
+test("API no-store middleware prevents sensitive response caching", () => {
+  const { headers, response } = responseRecorder();
+  let nextCalls = 0;
+
+  noStore({}, response, () => {
+    nextCalls += 1;
+  });
+
+  assert.equal(headers.get("cache-control"), "no-store, max-age=0");
+  assert.equal(headers.get("pragma"), "no-cache");
   assert.equal(nextCalls, 1);
 });
