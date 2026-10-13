@@ -30,7 +30,37 @@ test("security headers are applied and middleware continues", () => {
     headers.get("permissions-policy"),
     "camera=(), microphone=(), geolocation=()"
   );
+  assert.equal(headers.has("strict-transport-security"), false);
   assert.equal(nextCalls, 1);
+});
+
+test("HTTPS requests receive HSTS, including requests behind a TLS proxy", () => {
+  for (const request of [
+    { secure: true },
+    { headers: { "x-forwarded-proto": "https" } },
+    { headers: { "x-forwarded-proto": "https, http" } }
+  ]) {
+    const { headers, response } = responseRecorder();
+
+    securityHeaders(request, response, () => {});
+
+    assert.equal(
+      headers.get("strict-transport-security"),
+      "max-age=31536000; includeSubDomains"
+    );
+  }
+});
+
+test("plain HTTP requests do not receive HSTS", () => {
+  const { headers, response } = responseRecorder();
+
+  securityHeaders(
+    { secure: false, headers: { "x-forwarded-proto": "http" } },
+    response,
+    () => {}
+  );
+
+  assert.equal(headers.has("strict-transport-security"), false);
 });
 
 test("API no-store middleware prevents sensitive response caching", () => {

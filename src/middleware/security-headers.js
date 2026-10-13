@@ -1,5 +1,19 @@
 // Lightweight security headers that do not interfere with the current
 // Tailwind CDN or Socket.IO setup.
+function isSecureRequest(req) {
+  if (req?.secure === true) return true;
+
+  const forwarded =
+    req?.get?.("x-forwarded-proto") ??
+    req?.headers?.["x-forwarded-proto"] ??
+    "";
+
+  return String(forwarded)
+    .split(",")[0]
+    .trim()
+    .toLowerCase() === "https";
+}
+
 export function securityHeaders(req, res, next) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -8,6 +22,16 @@ export function securityHeaders(req, res, next) {
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=()"
   );
+
+  // Render terminates TLS at its proxy, so forwarded-proto is checked as well
+  // as Express's native secure flag. Do not send HSTS during local HTTP use.
+  if (isSecureRequest(req)) {
+    res.setHeader(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains"
+    );
+  }
+
   next();
 }
 
