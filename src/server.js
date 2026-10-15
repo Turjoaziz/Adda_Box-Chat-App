@@ -11,6 +11,7 @@ import messageRoutes from "./routes/messages.routes.js";
 import usersRoutes from "./routes/users.routes.js";
 import groupsRoutes from "./routes/groups.routes.js";
 import keyRoutes from "./routes/keys.routes.js";
+import { apiErrorHandler, apiNotFound } from "./middleware/api-errors.js";
 import { noStore, securityHeaders } from "./middleware/security-headers.js";
 import { initSocket } from "./socket.js";
 import { ensureDefaultGroups } from "./services/groups.js";
@@ -61,6 +62,10 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/groups", groupsRoutes);
 app.use("/api/keys", keyRoutes);
+
+// Keep API failures machine-readable and avoid exposing server internals.
+app.use("/api", apiNotFound);
+app.use("/api", apiErrorHandler);
 
 // 5) HTTP server + Socket.IO
 const server = http.createServer(app);
