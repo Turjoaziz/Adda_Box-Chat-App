@@ -27,6 +27,23 @@ test("unknown API routes return a JSON 404 response", () => {
   assert.deepEqual(res.body, { error: "API route not found." });
 });
 
+test("malformed JSON is reported as a client 400 error", () => {
+  const res = responseRecorder();
+  const parseError = Object.assign(new SyntaxError("Unexpected token"), {
+    type: "entity.parse.failed",
+    status: 400,
+    body: "{broken"
+  });
+
+  apiErrorHandler(parseError, {}, res, () => {
+    throw new Error("next should not be called");
+  });
+
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.body, { error: "Invalid JSON body." });
+  assert.equal(JSON.stringify(res.body).includes("{broken"), false);
+});
+
 test("unexpected API errors return a generic JSON 500 without leaking details", () => {
   const res = responseRecorder();
   const secretDetail = "database password should never appear";
