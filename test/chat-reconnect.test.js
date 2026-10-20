@@ -11,32 +11,56 @@ const token = `header.${Buffer.from(JSON.stringify({ exp: 4102444800 })).toStrin
 
 function setup() {
   const elements = new Map();
+  const windowListeners = new Map();
+  let documentStub;
+
   const element = id => {
-    if (!elements.has(id)) elements.set(id, {
-      value: id === "room" ? "general" : "",
-      textContent: "",
-      innerHTML: "",
-      children: [],
-      style: {},
-      classList: {
-        toggle() {},
-        add() {},
-        remove() {},
-        contains() { return false; }
-      },
-      addEventListener() {},
-      setAttribute() {},
-      focus() {},
-      remove() { this.removed = true; },
-      appendChild(child) { this.children.push(child); }
-    });
+    if (!elements.has(id)) {
+      const classes = new Set();
+      elements.set(id, {
+        value: id === "room" ? "general" : "",
+        textContent: "",
+        innerHTML: "",
+        children: [],
+        style: {},
+        classList: {
+          toggle(name, force) {
+            if (force === true) classes.add(name);
+            else if (force === false) classes.delete(name);
+            else if (classes.has(name)) classes.delete(name);
+            else classes.add(name);
+          },
+          add(...names) { names.forEach(name => classes.add(name)); },
+          remove(...names) { names.forEach(name => classes.delete(name)); },
+          contains(name) { return classes.has(name); }
+        },
+        addEventListener() {},
+        setAttribute() {},
+        focus() { documentStub.activeElement = this; },
+        remove() { this.removed = true; },
+        appendChild(child) { this.children.push(child); }
+      });
+    }
     return elements.get(id);
   };
+
+  documentStub = {
+    activeElement: null,
+    getElementById: element,
+    createElement: () => ({ textContent: "" })
+  };
+
   const sockets = [];
   const storage = new Map();
   const context = vm.createContext({
-    document: { getElementById: element, createElement: () => ({ textContent: "" }) },
-    window: { addEventListener() {} },
+    document: documentStub,
+    window: {
+      addEventListener(event, handler) {
+        const handlers = windowListeners.get(event) || [];
+        handlers.push(handler);
+        windowListeners.set(event, handlers);
+      }
+    },
     localStorage: {
       getItem: key => storage.get(key) ?? null,
       setItem: (key, value) => storage.set(key, value),
@@ -80,7 +104,7 @@ function setup() {
   context.saveToken(token);
   context.connect();
   const logs = () => element("log").children.map(child => child.textContent);
-  return { context, element, sockets, storage, logs };
+  return { context, element, sockets, storage, logs, documentStub, windowListeners };
 }
 
 function join(app, room = "general") {
@@ -209,4 +233,27 @@ test("invalid token during reconnect ends the session", () => {
   assert.equal(socket.disconnectCalls, 1);
   assert.equal(app.storage.has("adda_token"), false);
   assert.match(app.element("connectionStatus").textContent, /Please log in/);
+});
+
+
+test("Escape closes the forgot-password dialog and restores focus", () => {
+  const app = setup();
+  const trigger = app.element("btnForgotPassword");
+
+  trigger.focus();
+  app.context.openForgotPassword();
+  assert.equal(app.element("forgotPasswordModal").classList.contains("show"), true);
+
+  app.element("forgotPasswordEmail").focus();
+  let prevented = false;
+  for (const handler of app.windowListeners.get("keydown") || []) {
+    handler({
+      key: "Escape",
+      preventDefault() { prevented = true; }
+    });
+  }
+
+  assert.equal(prevented, true);
+  assert.equal(app.element("forgotPasswordModal").classList.contains("show"), false);
+  assert.equal(app.documentStub.activeElement, trigger);
 });

@@ -2965,6 +2965,7 @@
 
     let resetTokenFromLink = "";
     let resetEmailFromLink = "";
+    let passwordDialogReturnFocus = null;
 
     function setPasswordModalMessage(id,message,type=""){
       const el = $(id);
@@ -2973,7 +2974,19 @@
       el.className = "password-modal-message" + (type ? " " + type : "");
     }
 
+    function rememberPasswordDialogFocus(fallbackId){
+      const active = document.activeElement;
+      passwordDialogReturnFocus = active?.focus ? active : $(fallbackId);
+    }
+
+    function restorePasswordDialogFocus(){
+      const target = passwordDialogReturnFocus;
+      passwordDialogReturnFocus = null;
+      target?.focus?.();
+    }
+
     function openForgotPassword(){
+      rememberPasswordDialogFocus("btnForgotPassword");
       if($("forgotPasswordEmail")){
         $("forgotPasswordEmail").value = $("lEmail")?.value || "";
       }
@@ -2985,9 +2998,11 @@
     function closeForgotPassword(){
       $("forgotPasswordModal")?.classList?.remove("show");
       setPasswordModalMessage("forgotPasswordMessage","");
+      restorePasswordDialogFocus();
     }
 
     function openResetPassword(token,email){
+      rememberPasswordDialogFocus("lPass");
       resetTokenFromLink = token || "";
       resetEmailFromLink = email || "";
       if($("resetPasswordEmail")) $("resetPasswordEmail").value = resetEmailFromLink;
@@ -3012,6 +3027,7 @@
       resetEmailFromLink = "";
 
       if(clearUrl) clearSensitiveResetUrl();
+      restorePasswordDialogFocus();
     }
 
     async function requestPasswordReset(){
@@ -3169,6 +3185,21 @@
       if(e.key === "Enter"){
         e.preventDefault();
         submitPasswordReset();
+      }
+    });
+
+    window.addEventListener("keydown",e => {
+      if(e.key !== "Escape") return;
+
+      if($("resetPasswordModal")?.classList?.contains?.("show")){
+        e.preventDefault();
+        closeResetPassword(true);
+        return;
+      }
+
+      if($("forgotPasswordModal")?.classList?.contains?.("show")){
+        e.preventDefault();
+        closeForgotPassword();
       }
     });
 
