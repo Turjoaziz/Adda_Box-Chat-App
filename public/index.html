@@ -1513,11 +1513,11 @@
         </div>
       </section>
 
-      <div id="forgotPasswordModal" class="password-modal" role="dialog" aria-modal="true" aria-labelledby="forgotPasswordTitle">
+      <div id="forgotPasswordModal" class="password-modal" role="dialog" aria-modal="true" aria-labelledby="forgotPasswordTitle" aria-describedby="forgotPasswordCopy">
         <div class="password-modal-card">
-          <div class="password-modal-icon">?</div>
+          <div class="password-modal-icon" aria-hidden="true">?</div>
           <div id="forgotPasswordTitle" class="password-modal-title">Forgot your password?</div>
-          <div class="password-modal-copy">Enter your Adda Box email. If an account exists, we’ll email you a one-time reset link that expires in 15 minutes.</div>
+          <div id="forgotPasswordCopy" class="password-modal-copy">Enter your Adda Box email. If an account exists, we’ll email you a one-time reset link that expires in 15 minutes.</div>
           <input id="forgotPasswordEmail" type="email" placeholder="Email address" autocomplete="email" aria-label="Account email address" />
           <div id="forgotPasswordMessage" class="password-modal-message" role="status" aria-live="polite" aria-atomic="true"></div>
           <div class="password-modal-actions">
@@ -1527,14 +1527,14 @@
         </div>
       </div>
 
-      <div id="resetPasswordModal" class="password-modal" role="dialog" aria-modal="true" aria-labelledby="resetPasswordTitle">
+      <div id="resetPasswordModal" class="password-modal" role="dialog" aria-modal="true" aria-labelledby="resetPasswordTitle" aria-describedby="resetPasswordRequirements">
         <div class="password-modal-card">
-          <div class="password-modal-icon">↻</div>
+          <div class="password-modal-icon" aria-hidden="true">↻</div>
           <div id="resetPasswordTitle" class="password-modal-title">Choose a new password</div>
-          <div class="password-modal-copy">Use 8+ characters with uppercase, lowercase, a number and a symbol.</div>
+          <div id="resetPasswordRequirements" class="password-modal-copy">Use 8+ characters with uppercase, lowercase, a number and a symbol.</div>
           <input id="resetPasswordEmail" type="email" placeholder="Email address" readonly aria-label="Account email address" />
-          <input id="resetPasswordNew" type="password" placeholder="New password" autocomplete="new-password" aria-label="New password" aria-describedby="resetPasswordTitle" />
-          <input id="resetPasswordConfirm" type="password" placeholder="Confirm new password" autocomplete="new-password" aria-label="Confirm new password" />
+          <input id="resetPasswordNew" type="password" placeholder="New password" autocomplete="new-password" aria-label="New password" aria-describedby="resetPasswordRequirements" />
+          <input id="resetPasswordConfirm" type="password" placeholder="Confirm new password" autocomplete="new-password" aria-label="Confirm new password" aria-describedby="resetPasswordRequirements" />
           <div id="resetPasswordMessage" class="password-modal-message" role="status" aria-live="polite" aria-atomic="true"></div>
           <div class="password-modal-actions">
             <button id="btnCancelResetPassword" class="password-modal-cancel" type="button">Cancel</button>
