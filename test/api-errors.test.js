@@ -44,6 +44,26 @@ test("malformed JSON is reported as a client 400 error", () => {
   assert.equal(JSON.stringify(res.body).includes("{broken"), false);
 });
 
+test("oversized JSON is reported as a 413 client error without leaking parser details", () => {
+  const res = responseRecorder();
+  const parserDetail = "request entity too large: limit 102400 bytes";
+  const sizeError = Object.assign(new Error(parserDetail), {
+    type: "entity.too.large",
+    status: 413,
+    limit: 102400,
+    length: 150000
+  });
+
+  apiErrorHandler(sizeError, {}, res, () => {
+    throw new Error("next should not be called");
+  });
+
+  assert.equal(res.statusCode, 413);
+  assert.deepEqual(res.body, { error: "Request body is too large." });
+  assert.equal(JSON.stringify(res.body).includes(parserDetail), false);
+  assert.equal(JSON.stringify(res.body).includes("102400"), false);
+});
+
 test("unexpected API errors return a generic JSON 500 without leaking details", () => {
   const res = responseRecorder();
   const secretDetail = "database password should never appear";

@@ -15,6 +15,14 @@ export function apiErrorHandler(err, req, res, next) {
     });
   }
 
+  // Express/body-parser rejects JSON above its configured request limit with
+  // entity.too.large. Keep this a client error and do not expose parser details.
+  if (err?.type === "entity.too.large") {
+    return res.status(413).json({
+      error: "Request body is too large."
+    });
+  }
+
   console.error("Unhandled API error:", err?.message || "Unknown error");
 
   return res.status(500).json({
