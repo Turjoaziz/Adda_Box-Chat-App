@@ -12,6 +12,7 @@ import usersRoutes from "./routes/users.routes.js";
 import groupsRoutes from "./routes/groups.routes.js";
 import keyRoutes from "./routes/keys.routes.js";
 import { apiErrorHandler, apiNotFound } from "./middleware/api-errors.js";
+import { requireJsonBody } from "./middleware/content-type.js";
 import { noStore, securityHeaders } from "./middleware/security-headers.js";
 import { initSocket } from "./socket.js";
 import { ensureDefaultGroups } from "./services/groups.js";
@@ -57,6 +58,11 @@ app.get("/healthz", (req, res) => res.json({ ok: true }));
 // Auth tokens, private group data, key material, and message history should
 // never be stored by browser or intermediary caches.
 app.use("/api", noStore);
+
+// Current write endpoints all accept JSON bodies. Reject unsupported media types
+// before route handlers try to validate an unparsed request body.
+app.use("/api", requireJsonBody);
+
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", usersRoutes);
