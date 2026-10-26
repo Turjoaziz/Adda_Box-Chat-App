@@ -27,5 +27,12 @@ export function requireJsonBody(req, res, next) {
     });
   }
 
+  const body = req?.body;
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
+    return res.status(400).json({
+      error: "JSON body must be an object."
+    });
+  }
+
   return next();
 }

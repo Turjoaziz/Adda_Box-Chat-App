@@ -28,10 +28,11 @@ function run(request) {
   return { res, nextCalls };
 }
 
-test("JSON API writes continue to route handlers", () => {
+test("JSON object API writes continue to route handlers", () => {
   const { res, nextCalls } = run({
     method: "POST",
-    headers: { "content-type": "application/json; charset=utf-8" }
+    headers: { "content-type": "application/json; charset=utf-8" },
+    body: { email: "person@example.com" }
   });
 
   assert.equal(nextCalls, 1);
@@ -39,10 +40,11 @@ test("JSON API writes continue to route handlers", () => {
   assert.equal(res.body, null);
 });
 
-test("structured +json media types are accepted", () => {
+test("structured +json media types are accepted for object bodies", () => {
   const { nextCalls } = run({
     method: "PATCH",
-    headers: { "content-type": "application/merge-patch+json" }
+    headers: { "content-type": "application/merge-patch+json" },
+    body: { name: "Updated" }
   });
 
   assert.equal(nextCalls, 1);
@@ -50,9 +52,9 @@ test("structured +json media types are accepted", () => {
 
 test("write requests with unsupported content types return 415", () => {
   for (const request of [
-    { method: "POST", headers: { "content-type": "text/plain" } },
-    { method: "PUT", headers: { "content-type": "application/x-www-form-urlencoded" } },
-    { method: "PATCH", headers: {} }
+    { method: "POST", headers: { "content-type": "text/plain" }, body: {} },
+    { method: "PUT", headers: { "content-type": "application/x-www-form-urlencoded" }, body: {} },
+    { method: "PATCH", headers: {}, body: {} }
   ]) {
     const { res, nextCalls } = run(request);
 
@@ -64,7 +66,23 @@ test("write requests with unsupported content types return 415", () => {
   }
 });
 
-test("read-only API methods do not require a JSON content type", () => {
+test("write requests reject non-object JSON bodies with 400", () => {
+  for (const body of [null, [], "text", 42, true, undefined]) {
+    const { res, nextCalls } = run({
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body
+    });
+
+    assert.equal(nextCalls, 0);
+    assert.equal(res.statusCode, 400);
+    assert.deepEqual(res.body, {
+      error: "JSON body must be an object."
+    });
+  }
+});
+
+test("read-only API methods do not require a JSON body", () => {
   const { nextCalls } = run({
     method: "GET",
     headers: {}
