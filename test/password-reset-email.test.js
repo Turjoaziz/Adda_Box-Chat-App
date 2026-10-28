@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   passwordResetBaseUrl,
   passwordResetEmailProvider,
@@ -88,4 +89,15 @@ test("cors origin is used as the reset base url when no explicit url exists", ()
       assert.equal(passwordResetEmailProvider(), "gmail-smtp");
     }
   );
+});
+
+test("smtp credentials are not retained in a module-level transport cache key", () => {
+  const source = readFileSync(
+    new URL("../src/services/password-reset-email.js", import.meta.url),
+    "utf8"
+  );
+
+  assert.doesNotMatch(source, /smtpTransportKey/);
+  assert.doesNotMatch(source, /let\s+smtpTransport\b/);
+  assert.match(source, /function createSmtpTransport\(\)/);
 });

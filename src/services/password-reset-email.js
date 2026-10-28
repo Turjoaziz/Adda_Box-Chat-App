@@ -1,8 +1,5 @@
 import nodemailer from "nodemailer";
 
-let smtpTransport = null;
-let smtpTransportKey = "";
-
 export function passwordResetBaseUrl() {
   const explicit = process.env.PASSWORD_RESET_BASE_URL?.trim();
   if (explicit) return explicit.replace(/\/$/, "");
@@ -65,20 +62,16 @@ function passwordResetHtml(resetUrl) {
   );
 }
 
-function getSmtpTransport() {
+function createSmtpTransport() {
   const user = smtpUser();
   const pass = smtpPassword();
-  const key = user + ":" + pass;
 
-  if (!smtpTransport || smtpTransportKey !== key) {
-    smtpTransport = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user, pass }
-    });
-    smtpTransportKey = key;
-  }
-
-  return smtpTransport;
+  // Keep SMTP credentials scoped to the delivery attempt instead of retaining
+  // a long-lived cache key derived from the app password in module state.
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: { user, pass }
+  });
 }
 
 async function sendWithGmail({ to, resetUrl }) {
@@ -87,7 +80,7 @@ async function sendWithGmail({ to, resetUrl }) {
     process.env.SMTP_FROM?.trim() ||
     `Adda Box <${user}>`;
 
-  await getSmtpTransport().sendMail({
+  await createSmtpTransport().sendMail({
     from,
     to,
     subject: "Reset your Adda Box password",
