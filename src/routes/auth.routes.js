@@ -8,6 +8,7 @@ import {
   isPasswordResetEmailConfigured,
   sendPasswordResetEmail
 } from "../services/password-reset-email.js";
+import { passwordResetCooldown } from "../services/password-reset-cooldown.js";
 
 const router = Router();
 const RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
@@ -109,6 +110,12 @@ router.post(
     };
 
     const { email } = req.body;
+
+    // Apply the same generic cooldown before account lookup so unknown emails
+    // cannot bypass reset-request throttling or become an enumeration signal.
+    if (passwordResetCooldown(email)) {
+      return res.json(genericResponse);
+    }
 
     const user = await User.findOne({ email }).select(
       "+passwordResetTokenHash +passwordResetExpiresAt +passwordResetRequestedAt"
