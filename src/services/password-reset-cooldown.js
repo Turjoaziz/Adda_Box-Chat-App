@@ -1,14 +1,18 @@
-import { createHash } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 
 export function createPasswordResetCooldown({
   cooldownMs = 60 * 1000,
-  maxEntries = 1000
+  maxEntries = 1000,
+  secret = process.env.JWT_SECRET?.trim() || randomBytes(32)
 } = {}) {
   const recent = new Map();
 
   function keyFor(email) {
     const normalized = String(email || "").trim().toLowerCase();
-    return createHash("sha256").update(normalized).digest("hex");
+
+    return createHmac("sha256", secret)
+      .update(normalized)
+      .digest("hex");
   }
 
   function pruneExpired(now) {
