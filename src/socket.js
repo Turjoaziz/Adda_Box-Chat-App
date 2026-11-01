@@ -4,6 +4,7 @@ import User from "./models/User.js";
 import DeviceKey from "./models/DeviceKey.js";
 import GroupMember from "./models/GroupMember.js";
 import { findGroupBySlug, verifyGroupAccess } from "./services/groups.js";
+import { tokenPredatesPasswordChange } from "./services/auth-token.js";
 import {
   isValidSignedMessageMetadata,
   isValidEncryptedMessagePayload,
@@ -61,15 +62,8 @@ export function initSocket(httpServer, corsOrigin) {
       const payload = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(payload.id).select("email passwordChangedAt");
 
-      if (!user) return next(new Error("Invalid token"));
-
-      if (user.passwordChangedAt) {
-        const issuedAtMs = Number(payload.iat || 0) * 1000;
-        const changedAtMs = user.passwordChangedAt.getTime();
-
-        if (!payload.iat || issuedAtMs + 1000 < changedAtMs) {
-          return next(new Error("Invalid token"));
-        }
+      if (!user || tokenPredatesPasswordChange(payload, user)) {
+        return next(new Error("Invalid token"));
       }
 
       socket.user = { id: String(user._id), email: user.email };
