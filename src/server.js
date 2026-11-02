@@ -4,7 +4,7 @@ import express from "express";
 import http from "http";
 import cors from "cors";
 
-import { connectDB } from "./config/db.js";
+import { connectDB, isDatabaseReady } from "./config/db.js";
 import { validateEnv } from "./config/env.js";
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/messages.routes.js";
@@ -51,8 +51,15 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static("public"));
 
-// Health check (for Render)
-app.get("/healthz", (req, res) => res.json({ ok: true }));
+// Health check (for Render). Report unhealthy if MongoDB is unavailable so
+// the service is not considered ready while its data layer is disconnected.
+app.get("/healthz", (req, res) => {
+  if (!isDatabaseReady()) {
+    return res.status(503).json({ ok: false });
+  }
+
+  return res.json({ ok: true });
+});
 
 // 4) Routes
 // Auth tokens, private group data, key material, and message history should
