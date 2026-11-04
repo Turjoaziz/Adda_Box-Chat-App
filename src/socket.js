@@ -44,6 +44,14 @@ export function canSendToRoom(socket, room) {
   return Boolean(socket?.rooms?.has?.(room));
 }
 
+export function socketAuthToken(handshake) {
+  const token = handshake?.auth?.token;
+  if (typeof token !== "string") return null;
+
+  const trimmed = token.trim();
+  return trimmed ? trimmed : null;
+}
+
 // In-memory presence map: userId -> connection count
 const onlineUsers = new Map();
 
@@ -55,7 +63,9 @@ export function initSocket(httpServer, corsOrigin) {
   const io = new Server(httpServer, { cors: { origin: corsOrigin, credentials: true } });
 
   io.use(async (socket, next) => {
-    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+    // Accept JWTs only from Socket.IO's auth payload. Query-string tokens can
+    // leak through URLs, proxy logs, browser history, and diagnostics.
+    const token = socketAuthToken(socket.handshake);
     if (!token) return next(new Error("No token"));
 
     try {
