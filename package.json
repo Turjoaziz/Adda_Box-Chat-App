@@ -9,7 +9,7 @@
     "test": "node --test"
   },
   "engines": {
-    "node": ">=18 <23"
+    "node": ">=20 <23"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
