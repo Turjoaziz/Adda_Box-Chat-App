@@ -48,3 +48,30 @@ test("decorative password-dialog icons are hidden from screen readers", () => {
     /class="password-modal-icon" aria-hidden="true">↻/
   );
 });
+
+test("password dialogs trap Tab navigation while open", () => {
+  assert.match(
+    html,
+    /function trapPasswordDialogFocus\(modal,event\)/
+  );
+  assert.match(
+    html,
+    /event\?\.key !== "Tab"/
+  );
+  assert.match(
+    html,
+    /event\.shiftKey && \(active === first \|\| !modal\.contains\(active\)\)/
+  );
+  assert.match(
+    html,
+    /!event\.shiftKey && \(active === last \|\| !modal\.contains\(active\)\)/
+  );
+  assert.match(
+    html,
+    /trapPasswordDialogFocus\(resetModal,e\)/
+  );
+  assert.match(
+    html,
+    /trapPasswordDialogFocus\(forgotModal,e\)/
+  );
+});
