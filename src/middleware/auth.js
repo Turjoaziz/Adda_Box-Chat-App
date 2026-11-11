@@ -1,15 +1,12 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { tokenPredatesPasswordChange } from "../services/auth-token.js";
+import { extractBearerToken } from "../services/bearer-token.js";
 
 export async function requireAuth(req, res, next) {
-  const authHeader = req.headers.authorization || "";
-  if (!authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "No token" });
-  }
+  const token = extractBearerToken(req.headers.authorization);
 
-  const token = authHeader.split(" ")[1];
-  if (!token || token === "null" || token === "undefined") {
+  if (!token) {
     return res.status(401).json({ error: "No token" });
   }
 
