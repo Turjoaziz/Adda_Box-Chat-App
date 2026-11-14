@@ -9,6 +9,7 @@ import {
   sendPasswordResetEmail
 } from "../services/password-reset-email.js";
 import { passwordResetCooldown } from "../services/password-reset-cooldown.js";
+import { passwordResetBurstLimiter } from "../services/password-reset-rate-limit.js";
 
 const router = Router();
 const RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
@@ -110,6 +111,13 @@ router.post(
     };
 
     const { email } = req.body;
+
+    // Cap sudden waves of reset requests across many different addresses.
+    // Return the same generic response so throttling never reveals whether
+    // any submitted email belongs to an Adda Box account.
+    if (passwordResetBurstLimiter()) {
+      return res.json(genericResponse);
+    }
 
     // Apply the same generic cooldown before account lookup so unknown emails
     // cannot bypass reset-request throttling or become an enumeration signal.
