@@ -24,7 +24,7 @@ test("password reset burst limiter blocks requests once the window is full", () 
   assert.equal(shouldThrottle(3_000), true);
 });
 
-test("password reset burst limiter allows traffic again after the window expires", () => {
+test("password reset burst limiter expires requests individually across the sliding window", () => {
   const shouldThrottle = createPasswordResetBurstLimiter({
     windowMs: 60_000,
     maxRequests: 2
@@ -32,8 +32,13 @@ test("password reset burst limiter allows traffic again after the window expires
 
   assert.equal(shouldThrottle(1_000), false);
   assert.equal(shouldThrottle(2_000), false);
+
+  // At 61s the first request has expired, so one new request is allowed.
   assert.equal(shouldThrottle(61_000), false);
-  assert.equal(shouldThrottle(61_001), false);
+
+  // The second original request is still inside the window until 62s.
+  assert.equal(shouldThrottle(61_001), true);
+  assert.equal(shouldThrottle(62_000), false);
 });
 
 test("throttled requests do not extend the burst window", () => {
