@@ -14,7 +14,7 @@ function extractFunction(name) {
   const match = html.match(pattern);
 
   assert.ok(match, `${name} should exist in public/index.html`);
-  return `function ${name}(){${match[1]}\\n    }`;
+  return match[0];
 }
 
 test("reset URL scrubber removes query credentials but preserves path and hash", () => {
