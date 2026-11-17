@@ -25,6 +25,7 @@ test("security headers are applied and middleware continues", () => {
 
   assert.equal(headers.get("x-content-type-options"), "nosniff");
   assert.equal(headers.get("x-frame-options"), "DENY");
+  assert.equal(headers.get("cross-origin-opener-policy"), "same-origin");
   assert.equal(headers.get("referrer-policy"), "no-referrer");
   assert.equal(
     headers.get("permissions-policy"),
