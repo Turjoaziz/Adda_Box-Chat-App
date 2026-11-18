@@ -53,7 +53,7 @@ app.use(express.static("public"));
 
 // Health check (for Render). Report unhealthy if MongoDB is unavailable so
 // the service is not considered ready while its data layer is disconnected.
-app.get("/healthz", (req, res) => {
+app.get("/healthz", noStore, (req, res) => {
   if (!isDatabaseReady()) {
     return res.status(503).json({ ok: false });
   }
