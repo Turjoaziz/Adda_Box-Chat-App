@@ -4,7 +4,7 @@ import express from "express";
 import http from "http";
 import cors from "cors";
 
-import { connectDB, isDatabaseReady } from "./config/db.js";
+import { connectDB, disconnectDB, isDatabaseReady } from "./config/db.js";
 import { validateEnv } from "./config/env.js";
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/messages.routes.js";
@@ -16,6 +16,7 @@ import { requireJsonBody } from "./middleware/content-type.js";
 import { noStore, securityHeaders } from "./middleware/security-headers.js";
 import { initSocket } from "./socket.js";
 import { ensureDefaultGroups } from "./services/groups.js";
+import { createGracefulShutdown } from "./services/graceful-shutdown.js";
 
 // Fail early instead of discovering missing settings during login or signup.
 let config;
@@ -85,6 +86,14 @@ const server = http.createServer(app);
 initSocket(server, origins[0] || process.env.CORS_ORIGIN);
 
 const PORT = config.port;
+
+const shutdown = createGracefulShutdown({
+  server,
+  disconnect: disconnectDB
+});
+
+process.once("SIGTERM", () => shutdown("SIGTERM"));
+process.once("SIGINT", () => shutdown("SIGINT"));
 
 // 6) Connect DB then start
 connectDB(process.env.MONGO_URI)

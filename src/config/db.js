@@ -8,6 +8,11 @@ export async function connectDB(uri) {
   console.log("✅ MongoDB connected");
 }
 
+export async function disconnectDB() {
+  if (mongoose.connection.readyState === 0) return;
+  await mongoose.disconnect();
+}
+
 export function isDatabaseReady(connection = mongoose.connection) {
   // Mongoose readyState 1 means connected. Keep health responses generic so
   // connection strings, hostnames, and driver details are never exposed.
