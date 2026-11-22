@@ -49,7 +49,7 @@ app.use(cors({
 }));
 
 // 3) Core middleware and static files
-app.use(express.json());
+app.use(express.json({ limit: "32kb" }));
 app.use(express.static("public"));
 
 // Health check (for Render). Report unhealthy if MongoDB is unavailable so
