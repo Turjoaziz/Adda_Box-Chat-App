@@ -17,6 +17,7 @@ import { noStore, securityHeaders } from "./middleware/security-headers.js";
 import { initSocket } from "./socket.js";
 import { ensureDefaultGroups } from "./services/groups.js";
 import { createGracefulShutdown } from "./services/graceful-shutdown.js";
+import { isCorsOriginAllowed, parseCorsOrigins } from "./services/cors-origins.js";
 
 // Fail early instead of discovering missing settings during login or signup.
 let config;
@@ -35,15 +36,11 @@ app.disable("x-powered-by");
 app.use(securityHeaders);
 
 // 2) CORS (comma-separated origins in .env)
-const origins = (process.env.CORS_ORIGIN || "")
-  .split(",")
-  .map(s => s.trim())
-  .filter(Boolean);
+const origins = parseCorsOrigins(process.env.CORS_ORIGIN);
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || origins.length === 0) return cb(null, true); // allow curl/postman
-    cb(null, origins.includes(origin));
+    cb(null, isCorsOriginAllowed(origin, origins));
   },
   credentials: true
 }));
@@ -83,7 +80,7 @@ app.use("/api", apiErrorHandler);
 
 // 5) HTTP server + Socket.IO
 const server = http.createServer(app);
-initSocket(server, origins[0] || process.env.CORS_ORIGIN);
+initSocket(server, origins);
 
 const PORT = config.port;
 

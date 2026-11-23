@@ -5,6 +5,7 @@ import DeviceKey from "./models/DeviceKey.js";
 import GroupMember from "./models/GroupMember.js";
 import { findGroupBySlug, verifyGroupAccess } from "./services/groups.js";
 import { tokenPredatesPasswordChange } from "./services/auth-token.js";
+import { isCorsOriginAllowed } from "./services/cors-origins.js";
 import {
   isValidSignedMessageMetadata,
   isValidEncryptedMessagePayload,
@@ -59,8 +60,15 @@ function presenceList() {
   return Array.from(onlineUsers.keys());
 }
 
-export function initSocket(httpServer, corsOrigin) {
-  const io = new Server(httpServer, { cors: { origin: corsOrigin, credentials: true } });
+export function initSocket(httpServer, corsOrigins = []) {
+  const io = new Server(httpServer, {
+    cors: {
+      origin: (origin, callback) => {
+        callback(null, isCorsOriginAllowed(origin, corsOrigins));
+      },
+      credentials: true
+    }
+  });
 
   io.use(async (socket, next) => {
     // Accept JWTs only from Socket.IO's auth payload. Query-string tokens can
