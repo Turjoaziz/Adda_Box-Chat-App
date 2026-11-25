@@ -11,3 +11,10 @@ Use this checklist when Adda_Box builds successfully but fails before the server
 - After updating environment variables, redeploy and look for `MongoDB connected` before testing login and chat history.
 
 This checklist documents the deployment failure diagnosed on 27 September 2026 and keeps the recovery steps close to the project.
+
+## Browser connection failures
+
+- Inspect the browser Network tab for CORS errors.
+- Configure `CORS_ORIGIN` with comma-separated trusted origins (scheme, host and optional port, without paths or trailing slashes).
+- Redeploy and test login and chat from each approved frontend.
+- Confirm unlisted origins are rejected. A curl request without an Origin header is not sufficient to verify browser CORS behavior.
