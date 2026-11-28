@@ -18,3 +18,14 @@ This checklist documents the deployment failure diagnosed on 27 September 2026 a
 - Configure `CORS_ORIGIN` with comma-separated trusted origins (scheme, host and optional port, without paths or trailing slashes).
 - Redeploy and test login and chat from each approved frontend.
 - Confirm unlisted origins are rejected. A curl request without an Origin header is not sufficient to verify browser CORS behavior.
+
+## Post-deployment chat smoke test
+
+Use two separate browser sessions with test accounts to verify real-time messaging after a deployment.
+
+1. Sign in, join the same room in both sessions, and send a harmless test message in each direction.
+2. Disconnect one session from the network, type a draft, and attempt to send. Confirm the draft remains and no offline message is queued.
+3. Restore connectivity, wait for room confirmation, and send the draft. Verify the other session receives it once.
+4. Log out and sign in again. Confirm the previous session's room subscriptions are not automatically restored.
+
+For local regression checks, run `node --test test/chat-reconnect.test.js` from the repository root. These tests use simulated browser and socket objects; they do not replace the live deployment smoke test.
